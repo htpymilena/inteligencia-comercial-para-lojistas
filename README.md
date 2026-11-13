@@ -1,0 +1,1 @@
+# inteligencia-comercial-para-lojistas
