@@ -75,6 +75,11 @@ export function ExperimentsListPage() {
       return;
     }
 
+    if (!recommendationId) {
+      setFormError('Selecione uma recomendação aceita para criar o experimento.');
+      return;
+    }
+
     if (startDate > endDate) {
       setFormError('A data de início deve ser anterior ou igual à data de fim.');
       return;
@@ -264,7 +269,7 @@ export function ExperimentsListPage() {
               onChange={(e) => setRecommendationId(e.target.value)}
               className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
-              <option value="">Sem recomendação vinculada</option>
+              <option value="">Selecione uma recomendação aceita</option>
               {acceptedRecommendations?.map((rec) => (
                 <option key={rec.id} value={rec.id}>
                   {rec.title} ({rec.priority})

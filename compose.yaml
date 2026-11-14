@@ -15,6 +15,10 @@ services:
 
   backend:
     build: ./backend
+    command: >-
+      sh -c "python -m alembic upgrade head &&
+      python -m app.seed_demo &&
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-nexo}:${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-nexo}
       JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET}

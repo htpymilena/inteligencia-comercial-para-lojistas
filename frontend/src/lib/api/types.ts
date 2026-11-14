@@ -25,7 +25,8 @@ export class ApiClientError extends Error {
 
 export interface HealthResponse {
   status: string;
-  timestamp: string;
+  service?: string;
+  timestamp?: string;
   version?: string;
 }
 
@@ -34,7 +35,7 @@ export interface UserProfile {
   email: string;
   full_name: string;
   role: 'ADMIN' | 'LOJISTA';
-  created_at: string;
+  created_at?: string;
 }
 
 export interface LoginResponse {
@@ -47,7 +48,7 @@ export interface StoreItem {
   id: string;
   name: string;
   segment: string;
-  floor: string;
+  floor?: string;
   is_demo: boolean;
 }
 

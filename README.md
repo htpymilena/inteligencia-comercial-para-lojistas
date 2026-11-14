@@ -1,5 +1,28 @@
 # inteligencia-comercial-para-lojistas
 
+## Aplicação no repositório
+
+Este monorepositório reúne `frontend/` (React e TypeScript), `backend/` (FastAPI),
+`sistema/` (contrato OpenAPI e documentação) e `compose.yaml` na branch `main`.
+As telas de M00 a M06 consomem a API de demonstração. O módulo M07 (circuitos de
+três lojas) tem interface planejada, mas ainda não possui endpoints no backend.
+
+Para executar o ambiente de demonstração:
+
+1. Copie `.env.example` para `.env` e substitua todos os valores `CHANGE_ME` por
+   senhas locais. `JWT_SECRET` precisa de ao menos 32 bytes.
+2. Execute `docker compose up --build -d` na raiz. O backend aplica as migrations e
+   carrega a seed DEMO ao iniciar.
+3. Acesse `http://localhost:5173`. Use `admin@demo.invalid` ou
+   `lojista@demo.invalid` com a senha definida no `.env`.
+
+O frontend também pode ser executado com `cd frontend`, `npm ci` e `npm run dev`,
+desde que a API esteja disponível em `http://localhost:8000`. Para verificar o
+frontend, execute `npm run build` e `npm test` na pasta `frontend/`.
+
+As métricas, câmeras e mapas são sintéticos. A seed usa a data atual quando
+`DEMO_BASE_DATE` fica vazio; ela é idempotente e não redefine senhas já criadas.
+
 **Em formato PDF:** [Projeto NEXO (Web Wireframes).pdf](https://github.com/user-attachments/files/34809837/Projeto.NEXO.Web.Wireframes.pdf)
 
 **Inteligência Comercial Preditiva com Visão Computacional**

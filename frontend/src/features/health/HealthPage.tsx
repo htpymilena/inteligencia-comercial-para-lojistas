@@ -59,7 +59,8 @@ export function HealthPage() {
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 <span>Backend respondendo com sucesso</span>
               </div>
-              <p className="text-xs text-emerald-700">Timestamp: {health.timestamp || new Date().toISOString()}</p>
+              {health.service && <p className="text-xs text-emerald-700">Serviço: {health.service}</p>}
+              {health.timestamp && <p className="text-xs text-emerald-700">Timestamp: {health.timestamp}</p>}
               {health.version && (
                 <p className="text-xs text-emerald-700">Versão da API: {health.version}</p>
               )}

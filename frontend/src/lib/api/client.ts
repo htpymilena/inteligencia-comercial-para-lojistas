@@ -16,6 +16,48 @@ import {
   CircuitStats,
 } from './types';
 
+type BackendExperiment = {
+  id: string; store_id: string; recommendation_id: string; title: string;
+  metric: Experiment['target_metric']; start_date: string; end_date: string;
+  status: Experiment['status']; created_at: string;
+};
+
+type MetricTotals = {
+  visitors: number; interactions: number; sales_count: number;
+  revenue_brl: string; conversion_rate: number | null;
+};
+
+type MetricChanges = {
+  visitor_change_percent: number | null;
+  interaction_change_percent: number | null;
+  sales_change_percent: number | null;
+  revenue_change_percent: number | null;
+  conversion_change_pp: number | null;
+};
+
+function mapExperiment(value: BackendExperiment): Experiment {
+  return {
+    ...value,
+    target_metric: value.metric,
+    planned_start_date: value.start_date,
+    planned_end_date: value.end_date,
+  };
+}
+
+function metricValue(totals: MetricTotals | null, metric: Experiment['target_metric']): string {
+  if (!totals) return '—';
+  const key = { VISITORS: 'visitors', SALES: 'sales_count', REVENUE: 'revenue_brl',
+    CONVERSION: 'conversion_rate' } as const;
+  return String(totals[key[metric]] ?? '—');
+}
+
+function metricChange(changes: MetricChanges | null, metric: Experiment['target_metric']): number | null {
+  if (!changes) return null;
+  const key = { VISITORS: 'visitor_change_percent', SALES: 'sales_change_percent',
+    REVENUE: 'revenue_change_percent', CONVERSION: 'conversion_change_pp' } as const;
+  return changes[key[metric]];
+}
+
 export class ApiClient {
   private baseUrl: string;
   private getToken: () => string | null;
@@ -103,18 +145,21 @@ export class ApiClient {
 
   // --- M01: Autenticação e Lojas ---
   async login(credentials: { email: string; password: string }): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/api/v1/auth/login', {
+    const response = await this.request<LoginResponse & { user: UserProfile & { display_name: string } }>('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+    return { ...response, user: { ...response.user, full_name: response.user.display_name } };
   }
 
   async obterPerfil(): Promise<UserProfile> {
-    return this.request<UserProfile>('/api/v1/auth/me');
+    const user = await this.request<UserProfile & { display_name: string }>('/api/v1/auth/me');
+    return { ...user, full_name: user.display_name };
   }
 
   async listarLojas(): Promise<StoreItem[]> {
-    return this.request<StoreItem[]>('/api/v1/stores');
+    const response = await this.request<{ items: Array<StoreItem & { description?: string }> }>('/api/v1/stores');
+    return response.items;
   }
 
   async obterLoja(storeId: string): Promise<StoreItem> {
@@ -124,23 +169,87 @@ export class ApiClient {
   // --- M02: Painel e Métricas ---
   async obterDashboard(storeId: string, periodStart: string, periodEnd: string): Promise<DashboardResponse> {
     const params = new URLSearchParams({ period_start: periodStart, period_end: periodEnd });
-    return this.request<DashboardResponse>(`/api/v1/stores/${storeId}/dashboard?${params}`);
+    const [summary, daily] = await Promise.all([
+      this.request<{
+        store_id: string; period_start: string; period_end: string; visitors: number;
+        interactions: number; sales_count: number; conversion_rate: number | null;
+        revenue_brl: string; data_origin: string;
+      }>(`/api/v1/stores/${storeId}/dashboard?${params}`),
+      this.request<{ items: Array<{
+        date: string; visitor_count: number; interaction_count: number;
+        sales_count: number; conversion_rate: number | null; revenue_brl: string;
+      }> }>(`/api/v1/stores/${storeId}/metrics/daily?${params}`),
+    ]);
+    return {
+      store_id: summary.store_id,
+      period_start: summary.period_start,
+      period_end: summary.period_end,
+      total_visitors: summary.visitors,
+      total_interactions: summary.interactions,
+      total_sales: summary.sales_count,
+      conversion_rate: summary.conversion_rate,
+      total_revenue: summary.revenue_brl,
+      is_simulated: summary.data_origin === 'DEMO',
+      daily_metrics: daily.items.map((item) => ({
+        date: item.date, visitors: item.visitor_count, interactions: item.interaction_count,
+        sales: item.sales_count, conversion_rate: item.conversion_rate, revenue: item.revenue_brl,
+      })),
+    };
   }
 
   // --- M03: Monitoramento e Mapa de Calor ---
   async listarCamerasDemo(storeId: string): Promise<CameraSnapshot[]> {
-    return this.request<CameraSnapshot[]>(`/api/v1/stores/${storeId}/demo-cameras`);
+    const [cameras, snapshot] = await Promise.all([
+      this.request<{ items: Array<{ id: string; name: string; placement: string; is_simulated: boolean }> }>(
+        `/api/v1/stores/${storeId}/cameras`
+      ),
+      this.request<{ snapshot_at: string; people_now: number; entries_today: number; exits_today: number }>(
+        `/api/v1/stores/${storeId}/monitoring/demo`
+      ),
+    ]);
+    return cameras.items.map((camera) => ({
+      camera_id: camera.id,
+      name: camera.name,
+      zone: camera.placement,
+      current_count: snapshot.people_now,
+      entries_count: snapshot.entries_today,
+      exits_count: snapshot.exits_today,
+      is_simulated: camera.is_simulated,
+      timestamp: snapshot.snapshot_at,
+    }));
   }
 
   async obterMapaCalorDemo(storeId: string, date: string): Promise<HeatmapResponse> {
     const params = new URLSearchParams({ date });
-    return this.request<HeatmapResponse>(`/api/v1/stores/${storeId}/heatmap?${params}`);
+    const [heatmap, zones] = await Promise.all([
+      this.request<{ store_id: string; date: string; grid_width: number; grid_height: number;
+        data_origin: string; cells: Array<{ grid_x: number; grid_y: number; intensity: number }> }>(
+        `/api/v1/stores/${storeId}/heatmap/demo?${params}`
+      ),
+      this.request<{ items: Array<{ name: string; grid_x: number; grid_y: number;
+        grid_width: number; grid_height: number }> }>(`/api/v1/stores/${storeId}/zones`),
+    ]);
+    return {
+      store_id: heatmap.store_id, date: heatmap.date,
+      grid_width: heatmap.grid_width, grid_height: heatmap.grid_height,
+      is_simulated: heatmap.data_origin === 'DEMO',
+      cells: heatmap.cells.map((cell) => ({
+        x: cell.grid_x, y: cell.grid_y, intensity: cell.intensity,
+        zone_name: zones.items.find((zone) =>
+          cell.grid_x >= zone.grid_x && cell.grid_x < zone.grid_x + zone.grid_width &&
+          cell.grid_y >= zone.grid_y && cell.grid_y < zone.grid_y + zone.grid_height
+        )?.name || 'Área comum',
+      })),
+    };
   }
 
   // --- M04: Recomendações ---
   async listarRecomendacoes(storeId: string, status?: string): Promise<Recommendation[]> {
     const query = status && status !== 'ALL' ? `?status=${status}` : '';
-    return this.request<Recommendation[]>(`/api/v1/stores/${storeId}/recommendations${query}`);
+    const response = await this.request<{ items: Array<Recommendation & { evidence: string }> }>(
+      `/api/v1/stores/${storeId}/recommendations${query}`
+    );
+    return response.items.map((item) => ({ ...item, evidence_summary: item.evidence }));
   }
 
   async atualizarRecomendacao(
@@ -156,7 +265,8 @@ export class ApiClient {
 
   // --- M05: Experimentos ---
   async listarExperimentos(storeId: string): Promise<Experiment[]> {
-    return this.request<Experiment[]>(`/api/v1/stores/${storeId}/experiments`);
+    const response = await this.request<{ items: BackendExperiment[] }>(`/api/v1/stores/${storeId}/experiments`);
+    return response.items.map(mapExperiment);
   }
 
   async criarExperimento(
@@ -170,14 +280,27 @@ export class ApiClient {
       notes?: string;
     }
   ): Promise<Experiment> {
-    return this.request<Experiment>(`/api/v1/stores/${storeId}/experiments`, {
+    if (!payload.recommendation_id) {
+      throw new ApiClientError(422, { error: {
+        code: 'VALIDATION_ERROR', message: 'Selecione uma recomendação aceita para criar o experimento.'
+      } });
+    }
+    const response = await this.request<BackendExperiment>(`/api/v1/stores/${storeId}/experiments`, {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        title: payload.title,
+        recommendation_id: payload.recommendation_id,
+        metric: payload.target_metric,
+        start_date: payload.planned_start_date,
+        end_date: payload.planned_end_date,
+      }),
     });
+    return mapExperiment(response);
   }
 
   async obterExperimento(storeId: string, experimentId: string): Promise<Experiment> {
-    return this.request<Experiment>(`/api/v1/stores/${storeId}/experiments/${experimentId}`);
+    const response = await this.request<BackendExperiment>(`/api/v1/stores/${storeId}/experiments/${experimentId}`);
+    return mapExperiment(response);
   }
 
   async alterarStatusExperimento(
@@ -185,14 +308,29 @@ export class ApiClient {
     experimentId: string,
     status: 'RUNNING' | 'COMPLETED' | 'CANCELLED'
   ): Promise<Experiment> {
-    return this.request<Experiment>(`/api/v1/stores/${storeId}/experiments/${experimentId}/status`, {
+    const response = await this.request<BackendExperiment>(`/api/v1/stores/${storeId}/experiments/${experimentId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
+    return mapExperiment(response);
   }
 
   async obterResultadoExperimento(storeId: string, experimentId: string): Promise<ExperimentResult> {
-    return this.request<ExperimentResult>(`/api/v1/stores/${storeId}/experiments/${experimentId}/result`);
+    const response = await this.request<{
+      experiment_id: string; available: boolean; baseline: MetricTotals | null;
+      during: MetricTotals | null; changes: MetricChanges | null;
+    }>(`/api/v1/stores/${storeId}/experiments/${experimentId}/result`);
+    const experiment = await this.obterExperimento(storeId, experimentId);
+    const metric = experiment.target_metric;
+    return {
+      experiment_id: response.experiment_id,
+      target_metric: metric,
+      before_value: metricValue(response.baseline, metric),
+      after_value: metricValue(response.during, metric),
+      relative_change_percent: metricChange(response.changes, metric),
+      is_observational: true,
+      data_available: response.available,
+    };
   }
 
   // --- M06: Relatórios Comparativos ---
@@ -202,7 +340,39 @@ export class ApiClient {
     periodEnd: string
   ): Promise<ComparativeReportResponse> {
     const params = new URLSearchParams({ period_start: periodStart, period_end: periodEnd });
-    return this.request<ComparativeReportResponse>(`/api/v1/stores/${storeId}/reports/comparative?${params}`);
+    const response = await this.request<{
+      store_id: string; period_start: string; period_end: string;
+      baseline_start: string; baseline_end: string; data_origin: string;
+      baseline: MetricTotals | null; current: MetricTotals | null; changes: MetricChanges | null;
+    }>(`/api/v1/stores/${storeId}/reports/summary?${params}`);
+    const rows: Array<[string, keyof MetricTotals, keyof MetricChanges, boolean]> = [
+      ['Visitantes', 'visitors', 'visitor_change_percent', false],
+      ['Interações', 'interactions', 'interaction_change_percent', false],
+      ['Vendas', 'sales_count', 'sales_change_percent', false],
+      ['Faturamento', 'revenue_brl', 'revenue_change_percent', false],
+      ['Conversão', 'conversion_rate', 'conversion_change_pp', true],
+    ];
+    return {
+      store_id: response.store_id,
+      period_start: response.period_start,
+      period_end: response.period_end,
+      comparison_start: response.baseline_start,
+      comparison_end: response.baseline_end,
+      is_simulated: response.data_origin === 'DEMO',
+      metrics: rows.map(([name, key, changeKey, points]) => {
+        const current = response.current?.[key];
+        const previous = response.baseline?.[key];
+        const difference = current == null || previous == null ? null : Number(current) - Number(previous);
+        return {
+          metric_name: name,
+          current_value: current == null ? '—' : String(current),
+          previous_value: previous == null ? '—' : String(previous),
+          absolute_change: difference == null ? '—' : difference.toFixed(2),
+          percentage_change: points ? null : response.changes?.[changeKey] ?? null,
+          percentage_points_change: points ? response.changes?.[changeKey] ?? null : null,
+        };
+      }),
+    };
   }
 
   // --- M07: Circuitos ---
