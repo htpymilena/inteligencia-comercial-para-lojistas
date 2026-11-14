@@ -1,5 +1,8 @@
 # Tasks
 
+Execução experimental autorizada pelo usuário/equipe antes dos gates; branch experimental/backend-m01-m08. As condições de início e branch anteriores são substituídas por esta autorização, sem declarar integração. Código e testes disponíveis registrados em backend/EVIDENCIAS-M06.md. Tarefas que exigem SQL continuam pendentes sem TEST_DATABASE_URL.
+
+
 Aprovação técnica do planejamento registrada conforme manifestação explícita do usuário nesta revisão. Nenhuma tarefa de implementação foi concluída ou autorizada para execução agora; os gates continuam obrigatórios.
 
 Planejamento técnico aprovado; implementação não liberada. G00 não concluído. Implementação bloqueada até liberação para execução e cumprimento de M02 e M05; G05 INTEGRADO; regressão M00–M05. Cenários abaixo preparados como documentação, não testes implementados/executados.

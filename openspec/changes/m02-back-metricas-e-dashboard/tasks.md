@@ -1,5 +1,8 @@
 # Tasks
 
+Execução experimental autorizada pelo usuário/equipe antes dos gates; branch experimental/backend-m01-m08, dependência M01 experimental. A autorização atual substitui as condições anteriores de início/branch. SQL não executado sem TEST_DATABASE_URL; nenhuma integração declarada.
+
+
 Planejamento corrigido aprovado tecnicamente pelo usuário, incluindo RN010, RN011, critérios financeiros e testes previstos. Nenhuma tarefa de implementação foi concluída ou autorizada para execução agora. G00 não concluído. Implementação bloqueada até liberação para execução e cumprimento de M01; G01 INTEGRADO. Cenários abaixo preparados como documentação, não testes implementados/executados.
 
 ## 1. Pré-condições
@@ -11,9 +14,9 @@ Planejamento corrigido aprovado tecnicamente pelo usuário, incluindo RN010, RN0
 
 - [ ] 2.1 Implementar a persistência prevista (daily_metrics) sem create_all ou alterações destrutivas; verificar schema/constraints e cadeia Alembic em PostgreSQL 16 exclusivo quando aplicável e documentar os comandos.
 - [ ] 2.2 Implementar e testar agregação correta: quando período contém dias com 100/10 e 200/10 visitantes/vendas, comprovar que retorna 300 visitantes, 20 vendas e conversão 6.67, nunca média diária; documentar comportamento e fixture no relatório BACK.
-- [ ] 2.3 Implementar e testar decimal e zero: quando receitas são 0.10 e 0.20 e outra janela tem zero visitantes, comprovar que receita soma 0.30 e conversão da janela zero é null; documentar comportamento e fixture no relatório BACK.
+- [x] 2.3 Implementar e testar decimal e zero: quando receitas são 0.10 e 0.20 e outra janela tem zero visitantes, comprovar que receita soma 0.30 e conversão da janela zero é null; documentar comportamento e fixture no relatório BACK.
 - [ ] 2.4 Implementar e testar período validado: quando datas estão invertidas, inválidas ou excedem 366 dias inclusivos, comprovar que retorna 422 ApiError; 366 dias válidos são aceitos; documentar comportamento e fixture no relatório BACK.
-- [ ] 2.5 Implementar e testar baseline equivalente: quando consulta cobre 2026-11-10 a 2026-11-12, comprovar que baseline corresponde a 2026-11-07 a 2026-11-09 e base zero retorna variação null; documentar comportamento e fixture no relatório BACK.
+- [x] 2.5 Implementar e testar baseline equivalente: quando consulta cobre 2026-11-10 a 2026-11-12, comprovar que baseline corresponde a 2026-11-07 a 2026-11-09 e base zero retorna variação null; documentar comportamento e fixture no relatório BACK.
 - [ ] 2.6 Implementar e testar sem registros: quando janela autorizada não tem métricas, comprovar que retorna items vazio e totais zero com conversão null, sem registros fabricados; documentar comportamento e fixture no relatório BACK.
 - [ ] 2.7 Implementar e testar seed repetível: quando seed é executada duas vezes com a mesma data-base, comprovar que preserva 60 dias por loja, IDs e registros externos; documentar comportamento e fixture no relatório BACK.
 

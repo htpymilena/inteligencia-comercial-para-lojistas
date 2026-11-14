@@ -1,9 +1,21 @@
+# Configuração local e credenciais
 .env
+.env.*
+!.env.example
+!.env.*.example
+credentials.json
+credentials.*.json
+*.pem
+*.key
+.aws/
+
+# Python
 .venv/
-backend/.venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+
+# Frontend
 frontend/node_modules/
 frontend/dist/
