@@ -12,6 +12,7 @@ from app.experiments_api import router as experiments_router
 from app.metrics_api import router as metrics_router
 from app.monitor_api import router as monitor_router
 from app.recommendations_api import router as recommendations_router
+from app.reports_api import router as reports_router
 from app.schemas import ApiError, HealthResponse
 
 
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     application.include_router(monitor_router)
     application.include_router(recommendations_router)
     application.include_router(experiments_router)
+    application.include_router(reports_router)
 
     @application.get(
         "/health",

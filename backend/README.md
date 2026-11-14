@@ -1,5 +1,14 @@
 # Backend M00 — NEXO 2031
 
+## M06 experimental
+
+GET `/api/v1/stores/{store_id}/reports/summary?period_start=...&period_end=...`
+reutiliza métricas e comparador M02/M05. Até 366 dias inclusivos; baseline é a
+janela imediatamente anterior de mesmo tamanho. Dias ausentes tornam available=false
+com motivo e baseline/current/changes null. Zero registrado mantém available=true,
+com percentuais null quando divisor zero. Conversão compara pontos percentuais.
+Não há nova tabela, seed ou endpoint de CSV. Ver EVIDENCIAS-M06.md.
+
 ## M05 experimental
 
 Rotas `/api/v1/stores/{store_id}/experiments`: GET lista, POST cria (201),
