@@ -1,233 +1,110 @@
-# NEXO 2031 — Inteligência Comercial Preditiva para Lojistas
+# NEXO 2031 — Inteligência Comercial Preditiva com Visão Computacional
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org)
-[![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL_16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![React](https://img.shields.io/badge/Frontend-React_18-61DAFB?logo=react&logoColor=black)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/Language-TypeScript_5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Bundler-Vite_5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
-[![Docker](https://img.shields.io/badge/Deploy-Docker_Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
+[![HTML5](https://img.shields.io/badge/Frontend-HTML5_%2F_JS-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/pt-BR/docs/Web/HTML)
+[![TailwindCSS](https://img.shields.io/badge/Estilo-Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![TensorFlow.js](https://img.shields.io/badge/IA_no_Navegador-TensorFlow.js_4.22-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/js)
+[![COCO-SSD](https://img.shields.io/badge/Detec%C3%A7%C3%A3o-COCO--SSD_2.2-10B981)](https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd)
+[![LGPD](https://img.shields.io/badge/Privacidade-LGPD_Anonimizado-2563EB)](#-privacidade-lgpd-e-contexto-acadêmico)
 
-Sistema web de inteligência comercial para shopping centers e centros comerciais, integrando análise de fluxo e circulação de clientes, mapas de calor por zonas, geração de recomendações comerciais baseadas em regras explicáveis, gestão de experimentos A/B controlados e campanhas cooperativas de três lojas (circuitos de compras).
+Prototipação web SaaS de inteligência comercial preditiva aplicada ao varejo e shopping centers (**Capim Dourado Shopping**), combinando **Visão Computacional em tempo real no navegador**, análise espacial por **Mapas de Calor**, **Recomendações Estratégicas de IA**, **Circuitos Cooperativos de 3 Lojas** e relatórios comparativos **Antes x Depois**.
 
-> **Aviso de Privacidade e Dados DEMO:** Todas as métricas, contagens, posições de câmeras, fluxos espaciais e registros apresentados são agregados e sintéticos (origem `DEMO`). Em conformidade com a LGPD e as normas do projeto, não há captura de biometria, reconhecimento facial, gravação de imagens pessoais ou rastreamento individual de consumidores.
+> **Aviso de Privacidade e Conformidade LGPD:** Todo o processamento visual ocorre localmente no navegador do usuário de forma agregada e anonimizada. Não há gravação de imagens em servidor, reconhecimento facial, coleta de biometria ou rastreamento individual de consumidores.
 
 ---
 
-## 🚀 Como Rodar o Projeto
+## 🚀 Como Executar o Projeto
 
-A execução de toda a aplicação (Banco de Dados PostgreSQL 16, Backend FastAPI e Frontend React/Nginx) é realizada de forma orquestrada e isolada via **Docker Compose**.
+A aplicação foi construída como uma interface web autônoma (`nexo_2031_dashboard_webDEUS.html`), **sem necessidade de instalar backend, banco de dados ou Docker**.
 
 ### Pré-requisitos
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e em execução (suporte a Docker Engine 24+ e Docker Compose v2+).
+- Navegador moderno atualizado (**Google Chrome**, **Microsoft Edge**, **Brave** ou **Firefox**) com aceleração de hardware (WebGL) habilitada.
+- Conexão com a internet para carregar as bibliotecas via CDN (**Tailwind CSS**, **Google Fonts Inter**, **TensorFlow.js** e o modelo **COCO-SSD**).
+- O arquivo de vídeo de teste **`ytdown_gzlCw6Ds`** (formato `.mp4`, `.webm` ou `.mov`) salvo no computador para validação na aba de câmeras.
+
+### Passo a Passo para Abrir
+
+1. Clone ou baixe este repositório para a sua máquina.
+2. Localize o arquivo principal **`nexo_2031_dashboard_webDEUS.html`** na raiz do projeto.
+3. Escolha uma das formas abaixo para abrir:
+   - **Abertura Direta:** Dê um duplo clique no arquivo `nexo_2031_dashboard_webDEUS.html` para abri-lo diretamente no seu navegador padrão.
+   - **Via Servidor Local (Recomendado):** No VS Code, clique com o botão direito sobre `nexo_2031_dashboard_webDEUS.html` e selecione **"Open with Live Server"** (ou execute `python -m http.server 8080` no terminal na pasta do arquivo e acesse `http://localhost:8080/nexo_2031_dashboard_webDEUS.html`).
 
 ---
 
-### Passo 1: Configurar as Variáveis de Ambiente (`.env`)
+## 🎥 Como Testar a Visão Computacional com o Vídeo `ytdown_gzlCw6Ds`
 
-Na raiz do repositório, crie o arquivo `.env` a partir do modelo [.env.example](.env.example):
+O módulo **Câmeras** executa detecção real de pessoas utilizando **TensorFlow.js + COCO-SSD (`mobilenet_v2`)** diretamente no navegador do usuário.
 
-**No Windows PowerShell:**
-```powershell
-Copy-Item .env.example .env
-```
+### Passo 1: Acessar a Aba de Câmeras
+1. No menu lateral esquerdo (**Navegação do Sistema**), clique em **Câmeras** (`Monitoramento & Vídeo`, identificada com a etiqueta azul **`Teste`**).
+2. Na primeira abertura, aguarde alguns segundos enquanto o sistema carrega e aquece o modelo de IA no navegador (o indicador **`Modelo de IA pronto`** aparecerá ao lado do título da câmera).
 
-**No Linux / macOS (Bash):**
-```bash
-cp .env.example .env
-```
+### Passo 2: Carregar o Vídeo de Teste (`ytdown_gzlCw6Ds`)
+1. Clique no botão azul **"Fazer Upload de Vídeo (.mp4, .webm, .mov)"** — ou arraste e solte o arquivo diretamente na área pontilhada abaixo dos botões.
+2. Selecione no seu computador o vídeo de teste **`ytdown_gzlCw6Ds`** (ex.: `ytdown_gzlCw6Ds.mp4`).
+3. Assim que o arquivo for carregado:
+   - Os contadores (**Pessoas Agora**, **Entradas** e **Saídas**) são zerados automaticamente para iniciar a medição desde o primeiro quadro.
+   - O selo da câmera muda para **`Visão Computacional Ativa (COCO-SSD)`** e a reprodução inicia em loop.
 
-Abra o arquivo `.env` gerado e defina os valores locais. Um exemplo pronto para desenvolvimento:
+### Passo 3: O que Observar Durante a Execução
+- **Detecção Anonimizada (`Bounding Boxes`):** O modelo identifica apenas pessoas (`person`), desenha cantoneiras de rastreamento com identificador temporário (`Pessoa #01`, `Pessoa #02`, etc.), percentual de confiança e aplica uma **tarja escura de anonimização** sobre a região superior da cabeça.
+- **Classificação por Zonas da Loja:** Usando a posição dos pés de cada pessoa detectada, o sistema calcula em tempo real a ocupação de três zonas delimitadas na imagem:
+  - **Vitrine** (polígono azul à esquerda)
+  - **Corredor Central** (polígono verde ao centro)
+  - **Caixa** (polígono amarelo à direita)
+- **Alerta Automático da IA:** O card lateral **Alerta da IA** monitora o tempo de permanência (*dwell time*) e dispara avisos automáticos quando detecta pessoas paradas analisando produtos na vitrine ou alta concentração na zona.
 
-```env
-POSTGRES_DB=nexo
-POSTGRES_USER=nexo
-POSTGRES_PASSWORD=nexo_local_dev_123
-JWT_SECRET=chave_secreta_jwt_com_pelo_menos_32_bytes_para_assinatura
-DEMO_ADMIN_PASSWORD=admin123
-DEMO_LOJISTA_PASSWORD=lojista123
-DEMO_BASE_DATE=
-```
+### Controles Interativos da Tela de Câmeras
 
-> [!IMPORTANT]
-> A chave `JWT_SECRET` **precisa ter no mínimo 32 caracteres** para atender aos critérios de segurança criptográfica da API.
-
----
-
-### Passo 2: Construir e Iniciar os Serviços
-
-Execute o comando do Docker Compose na raiz do projeto:
-
-```powershell
-docker compose up --build -d
-```
-
-O Docker Compose executará automaticamente:
-1. Inicialização do banco relacional **PostgreSQL 16** com volume persistente e verificação de saúde (*healthcheck*).
-2. Construção da imagem do **Backend** (Python 3.12), aplicação das migrações de schema com **Alembic** (`alembic upgrade head`), carga inicial dos dados de demonstração (`python -m app.seed_demo`) e inicialização do servidor ASGI **Uvicorn** na porta `8000`.
-3. Construção do bundle estático do **Frontend** (Vite + TypeScript) e disponibilização via servidor web **Nginx** na porta `5173`.
+| Controle | Função |
+|---|---|
+| **Pausar / Reproduzir** | Pausa o vídeo e a inferência da IA simultaneamente, mantendo as caixas do último quadro analisado congeladas na tela para inspeção. |
+| **Bounding Boxes (OpenCV)** | Ativa ou desativa a exibição das caixas de detecção, IDs e selos de confiança sobre o vídeo. |
+| **Linhas de Zona** | Ativa ou desativa o desenho tracejado das áreas **Vitrine**, **Corredor Central** e **Caixa**. |
+| **Confiança mín. (`30%` a `95%`)** | Ajusta o limiar mínimo de certeza exigido para validar uma detecção de pessoa (padrão: `55%`). |
+| **Usar Simulação Demo (Sem Arquivo)** | Alterna para um cenário arquitetônico simulado em Canvas com silhuetas animadas caso queira testar a interface sem arquivo de vídeo. |
 
 ---
 
-### Passo 3: Acessar a Aplicação
+## 🧭 Guia das 6 Telas do Sistema
 
-Com os contêineres iniciados, utilize os seguintes links no seu navegador:
+A barra lateral esquerda permite navegar entre todos os módulos operacionais da plataforma:
 
-| Serviço / Recurso | URL | Descrição |
-|---|---|---|
-| **Painel Web (Frontend)** | [http://localhost:5173](http://localhost:5173) | Interface principal do sistema com login e dashboards |
-| **Status do Sistema** | [http://localhost:5173/status](http://localhost:5173/status) | Diagnóstico técnico público de conectividade (`/health`) |
-| **Documentação da API (Swagger)** | [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger UI interativo com todos os endpoints e contratos |
-| **Documentação ReDoc** | [http://localhost:8000/redoc](http://localhost:8000/redoc) | Especificação de endpoints e esquemas OpenAPI |
-| **Endpoint de Saúde (API)** | [http://localhost:8000/health](http://localhost:8000/health) | Resposta JSON de integridade do serviço (`status: ok`) |
+1. **Painel (`Visão Geral`)**
+   - Exibe os 4 indicadores consolidados da loja (**Visitantes**, **Interações**, **Vendas** e **Conversão**), um gráfico de linha interativo de movimentação horária (**10h às 22h**, com pico às **18h**) e um banner de oportunidade detectada pela IA.
+   - No cabeçalho superior, permite alternar o contexto entre **Loja 01 — Roupas**, **Loja 02 — Calçados** e **Loja 03 — Acessórios**.
 
----
+2. **Câmeras (`Monitoramento & Vídeo`)**
+   - Ambiente de validação de visão computacional com suporte ao vídeo **`ytdown_gzlCw6Ds`** ou simulação demo, contagem em tempo real e barras de ocupação por setor.
 
-### Passo 4: Credenciais de Acesso (Demonstração)
+3. **Mapa (`Mapa de Calor`)**
+   - Apresenta a **Planta Mix do Capim Dourado Shopping (1º Pavimento — Térreo, `38.800,50 m²`)** em vetor CAD sincronizado 1:1 com a camada térmica (com suporte opcional para importar o arquivo `.pdf` original).
+   - Permite alternar entre os períodos **Hoje**, **Horário de Pico 18h** e **Manhã**, aplicar **Zoom/Arraste (Pan)**, ajustar a opacidade do calor e clicar nos **Pins de Fluxo** (*Praça Alimentação / C&A*, *Outback / Acesso Sul*, *Renner*, *Cinemark / STZ*) para inspecionar fluxo/hora e tempo de permanência.
 
-A tela de login conta com botões amarelos de **Acesso Rápido de Demonstração**, ou você pode digitar diretamente:
+4. **IA (`Recomendações`)**
+   - Lista 3 oportunidades estratégicas geradas pelo cruzamento entre fluxo de câmeras e vendas do PDV (*Reposicionar acessórios na vitrine*, *Ajustar equipe no horário de pico* e *Criar campanha com loja vizinha*).
+   - Permite clicar em **Iniciar Teste Controlado** (atualizando o contador de **Testes Ativos**) ou **Rejeitar** cada sugestão.
 
-#### 1. Perfil Administrador (Gestão Global do Shopping)
-- **E-mail:** `admin@demo.invalid`
-- **Senha:** `admin123` (ou a senha configurada em `DEMO_ADMIN_PASSWORD`)
-- **Acesso:** Permissão para alternar entre todas as lojas cadastradas e criar/gerenciar Circuitos Cooperativos de 3 Lojas.
+5. **Circuito (`Circuito de 3 Lojas`)**
+   - Gerencia a campanha cooperativa **Missão Moda**, conectando **Loja 1 — Roupas**, **Loja 2 — Calçados** e **Loja 3 — Acessórios**.
+   - Conta com o botão **Simular Check-in por QR Code**, que incrementa em tempo real o contador de clientes que concluíram o roteiro para resgate do benefício (**Cupom de 15% + Pontos**).
 
-#### 2. Perfil Lojista (Gestão da Loja Própria)
-- **E-mail:** `lojista@demo.invalid`
-- **Senha:** `lojista123` (ou a senha configurada em `DEMO_LOJISTA_PASSWORD`)
-- **Acesso:** Acesso exclusivo à sua própria loja (*Loja Moda*), visualizando painel de vendas, mapas de calor, aceitando recomendações comerciais e gerando relatórios comparativos.
+6. **Relatórios (`Antes x Depois`)**
+   - Avalia o impacto das intervenções em **Visitas (`+18%`)** e **Conversão (`+3,2 p.p.`)** com filtro de janela temporal (**Últimos 30, 14 ou 7 dias**), gráficos comparativos de barras (*Fluxo*, *Permanência* e *Vendas*) e tabela de status das campanhas.
 
 ---
 
-### Comandos Úteis do Docker Compose
-
-- **Verificar o estado dos serviços:**
-  ```powershell
-  docker compose ps
-  ```
-- **Acompanhar os logs do backend em tempo real:**
-  ```powershell
-  docker compose logs -f backend
-  ```
-- **Acompanhar os logs de todos os contêineres:**
-  ```powershell
-  docker compose logs -f
-  ```
-- **Parar os serviços preservando os dados do banco:**
-  ```powershell
-  docker compose down
-  ```
-- **Recarregar a seed de demonstração manualmente:**
-  ```powershell
-  docker compose exec backend python -m app.seed_demo
-  ```
-
----
-
-## 👥 Visão por Perfil de Usuário
-
-O sistema implementa controle de acesso rigoroso por papéis (**RBAC**) e por vínculos de loja (`user_stores`):
-
-```mermaid
-flowchart TD
-    Login["/login (Autenticação JWT)"] --> CheckRole{Perfil do Usuário?}
-    
-    CheckRole -->|ADMIN| AdminScope["Todas as Lojas Autorizadas"]
-    CheckRole -->|LOJISTA| LojistaScope["Apenas Loja Vinculada (Loja Moda)"]
-    
-    AdminScope --> AdminStoreSelect["/app/lojas (Vê Moda, Calçados e Acessórios)"]
-    LojistaScope --> LojistaStoreSelect["/app/lojas (Vê apenas Loja Moda)"]
-    
-    AdminStoreSelect --> Features["Painel, Monitoramento, Mapa, Recomendações, Experimentos, Relatórios"]
-    LojistaStoreSelect --> Features
-    
-    AdminScope --> AdminCircuits["Circuitos 3 Lojas (Visualizar + Criar + Ativar)"]
-    LojistaScope --> LojistaCircuits["Circuitos 3 Lojas (Somente Leitura de parcerias)"]
-```
-
-### Matriz de Telas e Permissões
-
-| Tela | Rota | Lojista (`LOJISTA`) | Administrador (`ADMIN`) |
-|---|---|:---:|:---:|
-| **Seleção de Lojas** | `/app/lojas` | Apenas lojas vinculadas ao seu usuário | Todas as lojas do shopping |
-| **Painel Principal (KPIs)** | `/app/lojas/:storeId/painel` | Consulta dados da loja autorizada | Consulta dados de qualquer loja |
-| **Monitoramento Sintético** | `/app/lojas/:storeId/monitoramento` | Câmeras DEMO da loja autorizada | Câmeras DEMO de qualquer loja |
-| **Mapa de Calor 10x8** | `/app/lojas/:storeId/mapa` | Matriz de 80 células da loja autorizada | Matriz de qualquer loja |
-| **Recomendações** | `/app/lojas/:storeId/recomendacoes` | Aceitar/Descartar na sua loja | Consulta e auditoria global |
-| **Experimentos Comerciais** | `/app/lojas/:storeId/experimentos` | Criação e acompanhamento de testes A/B | Gestão de testes em qualquer loja |
-| **Relatórios Comparativos** | `/app/lojas/:storeId/relatorios` | Comparativo antes/depois e exportação CSV | Relatórios de qualquer loja |
-| **Circuitos de 3 Lojas** | `/app/circuitos` | Leitura de circuitos participantes | Leitura e botão **`+ Novo Circuito`** |
-
----
-
-## 🧩 Estrutura do Monorepo
+## 📁 Estrutura do Repositório
 
 ```text
-inteligencia-comercial-para-lojistas/
-├── backend/                  # API REST em FastAPI / Python 3.12
-│   ├── alembic/              # Migrações versionadas de banco de dados (001 a 005)
-│   ├── app/                  # Código-fonte da aplicação (Routers, DTOs, Models, Services)
-│   ├── tests/                # Suítes de testes: unit/, contract/ e integration/
-│   ├── Dockerfile            # Imagem de produção do backend Python
-│   └── requirements.lock     # Dependências com versões exatas fixadas
-├── frontend/                 # Single Page Application em React 18 / TypeScript / Vite
-│   ├── src/                  # Componentes, Páginas, Hooks de autenticação e API Client
-│   ├── tests/                # Testes de componentes, formulários e integração (Vitest)
-│   ├── Dockerfile            # Multi-stage build (Node build -> Nginx serve)
-│   └── package.json          # Dependências do frontend e scripts
-├── sistema/                  # Documentação normativa e de engenharia de software
-│   ├── openapi.yaml          # Contrato HTTP OpenAPI normativo congelado
-│   ├── 01-PRD.md             # Requisitos de Produto
-│   ├── 02-ESPECIFICACAO...   # Especificação Técnica da Arquitetura
-│   ├── 03-MAPEAMENTO-TELAS.md# Mapeamento visual das telas e wireframes
-│   ├── 04-REGRAS-NEGOCIO.md  # Regras de negócio auditadas (RN001 a RN027)
-│   └── 06-MAPA-MODULOS.md    # Fatias verticais e mapa de entregas (M00 a M08)
-├── openspec/                 # Especificações de mudanças e governança OpenSpec
-├── compose.yaml              # Definição dos serviços multi-container Docker Compose
-├── .env.example              # Modelo de configuração de variáveis de ambiente
-└── README.md                 # Este documento
+├── nexo_2031_dashboard_webDEUS.html   # Aplicação web completa (Interface + IA COCO-SSD + Planta Mix)
+├── ytdown_gzlCw6Ds.mp4                # Vídeo local de teste para validação da visão computacional
+└── README.md                          # Documentação de uso e testes do sistema
 ```
 
 ---
 
-## 🧪 Testes e Validação de Qualidade
+## 🔒 Privacidade, LGPD e Contexto Acadêmico
 
-O projeto conta com ampla cobertura de testes automatizados unitários, de contrato e de integração.
-
-### 1. Testes do Backend (Python)
-
-Para rodar os testes sem necessitar de Python instalado no host, utilize o próprio contêiner Docker:
-
-```powershell
-# Testes Unitários e de Conformidade com o Contrato OpenAPI (59 testes):
-docker compose exec backend python -m pytest tests/unit tests/contract -q
-
-# Testes de Integração com Banco de Dados PostgreSQL Real (19 testes):
-docker compose exec backend python -m pytest tests/integration -q
-
-# Verificação de Tipagem Estática:
-docker compose exec backend python -m mypy
-
-# Linting e Validação de Formatação:
-docker compose exec backend python -m ruff check --no-cache .
-```
-
-### 2. Testes do Frontend (React / Vitest)
-
-```powershell
-# Executar a suíte de testes Vitest (76 testes):
-npm --prefix frontend test
-
-# Executar o linter ESLint:
-npm --prefix frontend run lint
-
-# Executar a compilação TypeScript e Build de Produção:
-npm --prefix frontend run build
-```
-
----
-
-## 📜 Licença e Contexto Acadêmico
-
-Projeto desenvolvido como solução de **Inteligência Comercial Preditiva com Visão Computacional** aplicada ao setor de varejo, focado na governança de dados, conformidade ética com privacidade e arquitetura limpa de software.
+Projeto desenvolvido como solução de **Inteligência Comercial Preditiva com Visão Computacional** aplicada ao varejo físico. Em estrita conformidade com a **LGPD**, o protótipo utiliza apenas contagens numéricas agregadas, coordenadas espaciais anônimas e mascaramento visual sobre a região facial durante o processamento em tempo real, garantindo que nenhum dado pessoal sensível ou biométrico seja capturado ou armazenado.
