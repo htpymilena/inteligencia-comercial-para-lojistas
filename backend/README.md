@@ -1,5 +1,16 @@
 # Backend M00 — NEXO 2031
 
+## M02 experimental
+
+GET `/api/v1/stores/{store_id}/dashboard` e `/metrics/daily` exigem JWT e
+`period_start`/`period_end` inclusivos, até 366 dias. Seed explícita acrescenta
+60 dias por loja terminando em `DEMO_BASE_DATE` (padrão dia local Araguaína).
+Receitas são Decimal exatas em centavos, não negativas, com serialização string.
+Negativos, não finitos e precisão inválida falham antes da escrita. Interações
+podem superar visitantes. Taxa usa totais; divisor zero retorna null.
+Datas sem métricas não são preenchidas. Revision Alembic 002; sem ingestão HTTP.
+SQL ainda depende de TEST_DATABASE_URL nesta sessão; ver EVIDENCIAS-M02.md.
+
 ## Branch experimental M01
 
 Esta branch inclui identidade e lojas conforme contrato, além do M00 preservado.
