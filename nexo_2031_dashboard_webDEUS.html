@@ -1,0 +1,3281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXO 2031 — Inteligência Comercial Preditiva com Visão Computacional</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- TensorFlow.js + COCO-SSD (visão computacional no navegador, aba Câmeras) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <!-- Fonte Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              dark: '#1E293B',
+              primary: '#2563EB',
+              emerald: '#10B981',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8FAFC;
+      color: #1E293B;
+    }
+
+    /* Scrollbar discreta e elegante */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    /* Animações suaves para troca de telas e toasts */
+    .screen-section {
+      animation: fadeIn 0.22s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilo da área de drag-and-drop */
+    .dropzone-active {
+      border-color: #2563EB !important;
+      background-color: #EFF6FF !important;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-[#1E293B] antialiased selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Container Principal SaaS Desktop -->
+  <div class="min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Overlay Mobile para Sidebar -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/40 z-30 hidden lg:hidden" onclick="toggleMobileSidebar(false)"></div>
+
+    <!-- SIDEBAR FIXA À ESQUERDA (#FFFFFF) -->
+    <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-white border-r border-[#E2E8F0] flex flex-col justify-between transition-transform duration-200 -translate-x-full lg:translate-x-0 shrink-0">
+      <div>
+        <!-- Logotipo NEXO 2031 -->
+        <div class="h-16 px-6 flex items-center justify-between border-b border-[#E2E8F0]">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-[#1E293B] flex items-center justify-center text-white shadow-sm">
+              <!-- Ícone geométrico NEXO -->
+              <svg class="w-5 h-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div>
+              <span class="font-bold text-base tracking-tight text-[#1E293B] block leading-none">NEXO 2031</span>
+              <span class="text-[11px] font-medium text-slate-400 mt-1 block">Retail Vision AI</span>
+            </div>
+          </div>
+          <button class="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100" onclick="toggleMobileSidebar(false)" aria-label="Fechar menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Menu de Navegação das 6 Telas -->
+        <div class="px-3 py-5">
+          <p class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Navegação do Sistema</p>
+          <nav class="space-y-1" id="sidebarNav">
+            <!-- 1. Painel -->
+            <button data-screen="painel" onclick="navigateTo('painel')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors bg-blue-50 text-[#2563EB]">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+              <div class="text-left">
+                <span class="block leading-tight">Painel</span>
+                <span class="text-[11px] font-normal text-slate-400 block">Visão Geral</span>
+              </div>
+            </button>
+
+            <!-- 2. Câmeras -->
+            <button data-screen="cameras" onclick="navigateTo('cameras')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[#1E293B] transition-colors">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
+              <div class="text-left flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="block leading-tight">Câmeras</span>
+                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-[#2563EB]">Teste</span>
+                </div>
+                <span class="text-[11px] font-normal text-slate-400 block">Monitoramento & Vídeo</span>
+              </div>
+            </button>
+
+            <!-- 3. Mapa -->
+            <button data-screen="mapa" onclick="navigateTo('mapa')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[#1E293B] transition-colors">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+              </svg>
+              <div class="text-left">
+                <span class="block leading-tight">Mapa</span>
+                <span class="text-[11px] font-normal text-slate-400 block">Mapa de Calor</span>
+              </div>
+            </button>
+
+            <!-- 4. IA -->
+            <button data-screen="ia" onclick="navigateTo('ia')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[#1E293B] transition-colors">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+              </svg>
+              <div class="text-left flex-1">
+                <div class="flex items-center justify-between">
+                  <span class="block leading-tight">IA</span>
+                  <span id="iaBadgeCount" class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">3</span>
+                </div>
+                <span class="text-[11px] font-normal text-slate-400 block">Recomendações</span>
+              </div>
+            </button>
+
+            <!-- 5. Circuito -->
+            <button data-screen="circuito" onclick="navigateTo('circuito')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[#1E293B] transition-colors">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              <div class="text-left">
+                <span class="block leading-tight">Circuito</span>
+                <span class="text-[11px] font-normal text-slate-400 block">Circuito de 3 Lojas</span>
+              </div>
+            </button>
+
+            <!-- 6. Relatórios -->
+            <button data-screen="relatorios" onclick="navigateTo('relatorios')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[#1E293B] transition-colors">
+              <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              <div class="text-left">
+                <span class="block leading-tight">Relatórios</span>
+                <span class="text-[11px] font-normal text-slate-400 block">Antes x Depois</span>
+              </div>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Rodapé da Sidebar: Resumo de Arquitetura / Wireframe -->
+      <div class="p-4 border-t border-[#E2E8F0] bg-slate-50/70">
+        <div class="rounded-lg border border-[#E2E8F0] bg-white p-3">
+          <div class="flex items-center gap-2 text-xs font-semibold text-[#1E293B]">
+            <span class="w-2 h-2 rounded-full bg-[#2563EB]"></span>
+            Prototipação Web SaaS
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+            Validação de fluxo operacional sem identificação biométrica.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <!-- CABEÇALHO SUPERIOR -->
+      <header class="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur border-b border-[#E2E8F0] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <!-- Botão Menu Mobile -->
+          <button onclick="toggleMobileSidebar(true)" class="lg:hidden p-2 rounded-lg border border-[#E2E8F0] text-slate-600 hover:bg-slate-50" aria-label="Abrir menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+
+          <div class="truncate">
+            <h1 id="headerTitle" class="text-base sm:text-lg font-bold text-[#1E293B] truncate">Painel — Visão Geral da Loja</h1>
+            <p id="headerSubtitle" class="text-xs text-slate-500 hidden sm:block truncate">Inteligência Comercial Preditiva com Visão Computacional</p>
+          </div>
+        </div>
+
+        <!-- Controles Direitos: Seletor de Loja, Badge LGPD e Status Online -->
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <!-- Seletor de Loja -->
+          <div class="hidden md:flex items-center bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-2.5 py-1.5">
+            <svg class="w-4 h-4 text-slate-500 mr-2 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <select id="storeSelector" onchange="handleStoreChange()" class="bg-transparent text-xs font-medium text-[#1E293B] focus:outline-none cursor-pointer">
+              <option value="Loja 01 — Roupas | Shopping Center">Loja 01 — Roupas | Shopping Center</option>
+              <option value="Loja 02 — Calçados | Shopping Center">Loja 02 — Calçados | Shopping Center</option>
+              <option value="Loja 03 — Acessórios | Shopping Center">Loja 03 — Acessórios | Shopping Center</option>
+            </select>
+          </div>
+
+          <!-- Badge Conformidade LGPD -->
+          <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 border border-[#E2E8F0] text-[#1E293B] text-xs font-medium" title="Nenhum dado biométrico ou facial é armazenado">
+            <svg class="w-3.5 h-3.5 text-[#2563EB] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>LGPD: Processamento Anonimizado</span>
+          </div>
+
+          <!-- Indicador de Status Online -->
+          <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
+            </span>
+            <span class="hidden sm:inline">Online</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTEÚDO DAS TELAS -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+
+        <!-- ============================================================== -->
+        <!-- 1. TELA: PAINEL (VISÃO GERAL)                                  -->
+        <!-- ============================================================== -->
+        <section id="screen-painel" class="screen-section space-y-6">
+          <!-- 4 Cards de KPI no Topo -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <!-- KPI 1: Visitantes -->
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs hover:border-slate-300 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Visitantes</span>
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+              </div>
+              <div class="mt-3 flex items-baseline justify-between">
+                <span id="kpiVisitantes" class="text-2xl font-bold text-[#1E293B]">1.248</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#10B981]">
+                  ↑ 8%
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Contagem agregada via visão computacional</p>
+            </div>
+
+            <!-- KPI 2: Interações -->
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs hover:border-slate-300 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Interações</span>
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+                </div>
+              </div>
+              <div class="mt-3 flex items-baseline justify-between">
+                <span id="kpiInteracoes" class="text-2xl font-bold text-[#1E293B]">312</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#10B981]">
+                  ↑ 12%
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Permanência &gt; 15s em vitrines e araras</p>
+            </div>
+
+            <!-- KPI 3: Vendas -->
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs hover:border-slate-300 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Vendas</span>
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-[#10B981] flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                </div>
+              </div>
+              <div class="mt-3 flex items-baseline justify-between">
+                <span id="kpiVendas" class="text-2xl font-bold text-[#1E293B]">198</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#10B981]">
+                  ↑ 10%
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Cupons fiscais integrados ao PDV</p>
+            </div>
+
+            <!-- KPI 4: Conversão -->
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs hover:border-slate-300 transition-colors">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Conversão</span>
+                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                </div>
+              </div>
+              <div class="mt-3 flex items-baseline justify-between">
+                <span id="kpiConversao" class="text-2xl font-bold text-[#1E293B]">15,9%</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#10B981]">
+                  ↑ 2,1 p.p.
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Relação Vendas / Visitantes entrantes</p>
+            </div>
+          </div>
+
+          <!-- Gráfico de Linha Interativo: Movimentação (10h às 22h) -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+              <div>
+                <h2 class="text-base font-bold text-[#1E293B]">Movimentação: Fluxo de Visitantes na Loja</h2>
+                <p class="text-xs text-slate-500">Distribuição horária das 10h às 22h (passe o cursor sobre os pontos para detalhar)</p>
+              </div>
+              <div class="flex items-center gap-4 text-xs">
+                <span class="flex items-center gap-1.5 font-medium text-slate-600">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#2563EB]"></span> Visitantes/hora
+                </span>
+                <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 font-medium">Pico: 18h (185 pessoas)</span>
+              </div>
+            </div>
+
+            <!-- Container do Gráfico SVG Interativo -->
+            <div class="relative w-full overflow-x-auto">
+              <div id="painelChartTooltip" class="hidden pointer-events-none absolute z-10 bg-[#1E293B] text-white text-xs rounded-lg px-3 py-2 shadow-lg transition-all duration-75">
+                <div class="font-bold" id="tooltipHour">18h</div>
+                <div class="text-blue-200 mt-0.5" id="tooltipValue">185 visitantes</div>
+              </div>
+              <svg id="painelLineChart" viewBox="0 0 860 250" class="w-full h-60 select-none overflow-visible"></svg>
+            </div>
+          </div>
+
+          <!-- Banner de Destaque de Oportunidade da IA -->
+          <div class="bg-gradient-to-r from-slate-900 to-[#1E293B] rounded-xl p-5 sm:p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-700">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-xl shrink-0">
+                ✨
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold uppercase tracking-wider text-blue-300">IA Detectou Oportunidade</span>
+                  <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium">Alta Prioridade</span>
+                </div>
+                <p class="text-sm sm:text-base font-medium text-slate-100 mt-1">
+                  Aumente a exposição da categoria <strong class="text-white underline decoration-blue-400">'Acessórios'</strong> na área de maior fluxo (corredor central) para potencializar as vendas.
+                </p>
+              </div>
+            </div>
+            <button onclick="navigateTo('ia', true)" class="w-full md:w-auto shrink-0 px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-500 active:bg-blue-700 text-white text-sm font-semibold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2">
+              <span>Ver Recomendação</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 2. TELA: CÂMERAS (FOCO PRINCIPAL PARA TESTE DE INTERFACE)      -->
+        <!-- ============================================================== -->
+        <section id="screen-cameras" class="screen-section hidden space-y-6">
+          <!-- Barra de Upload de Vídeo & Modo Simulação -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base font-bold text-[#1E293B]">Ambiente de Teste de Visão Computacional</h2>
+                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] border border-blue-200">Sem Reconhecimento Facial</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">
+                  Faça upload de qualquer gravação local de câmera para testar a sobreposição de detecção em tempo real ou execute a simulação interativa.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <button onclick="activateDemoSimulation()" id="btnDemoSim" class="px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold border border-[#E2E8F0] bg-slate-50 hover:bg-slate-100 text-[#1E293B] transition-colors flex items-center gap-2 cursor-pointer">
+                  <svg class="w-4 h-4 text-[#2563EB]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <span>Usar Simulação Demo (Sem Arquivo)</span>
+                </button>
+
+                <label for="videoUploadInput" class="px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-[#2563EB] hover:bg-blue-700 text-white transition-colors flex items-center gap-2 cursor-pointer shadow-xs">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Fazer Upload de Vídeo (.mp4, .webm, .mov)</span>
+                </label>
+                <input id="videoUploadInput" type="file" accept="video/mp4,video/webm,video/quicktime,video/*" class="hidden" onchange="handleVideoFileSelect(event)" />
+              </div>
+            </div>
+
+            <!-- Zona de Drag and Drop -->
+            <div id="videoDropZone" class="mt-4 border-2 border-dashed border-slate-300 rounded-xl p-3.5 text-center bg-slate-50/70 hover:bg-slate-50 transition-colors cursor-pointer" onclick="document.getElementById('videoUploadInput').click()">
+              <p id="videoSourceLabel" class="text-xs text-slate-600 font-medium">
+                Arraste e solte um arquivo de vídeo aqui ou clique para selecionar • <span class="text-[#2563EB] font-semibold">Fonte Ativa: Simulação Demo da Loja A (Canvas)</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Grid Principal: Player + Overlay à Esquerda / Métricas e Zonas à Direita -->
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Coluna do Player (2/3) -->
+            <div class="xl:col-span-2 bg-white rounded-xl border border-[#E2E8F0] p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm text-[#1E293B]">Câmera 01 — Entrada & Corredor Central</span>
+                  <span id="camModeTag" class="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">OpenCV YOLOv8-Nano (Simulado)</span>
+                  <span id="aiModelStatus" class="hidden"></span>
+                </div>
+                <div id="liveStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-bold tracking-wide">
+                  <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                  AO VIVO / MODO TESTE
+                </div>
+              </div>
+
+              <!-- Viewport do Vídeo + Canvas Sobreposto -->
+              <div class="relative w-full aspect-video bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+                <!-- Elemento Vídeo HTML5 para arquivos locais -->
+                <video id="cameraVideoPlayer" class="w-full h-full object-contain hidden" playsinline loop muted></video>
+                <!-- Canvas de Fundo para Simulação Demo -->
+                <canvas id="simSceneCanvas" class="w-full h-full block"></canvas>
+                <!-- Canvas Overlay de Visão Computacional (Bounding Boxes + Zonas) -->
+                <canvas id="cvOverlayCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+                <!-- Selo Superior Esquerdo de Privacidade no Feed -->
+                <div class="absolute top-3 left-3 bg-slate-950/75 backdrop-blur-xs text-white text-[11px] px-2.5 py-1 rounded-md border border-white/15 flex items-center gap-1.5 pointer-events-none">
+                  <svg class="w-3.5 h-3.5 text-[#10B981]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span>Rastreamento Anonimizado • Sem Biometria Facial</span>
+                </div>
+              </div>
+
+              <!-- Controles Rápidos Abaixo do Player -->
+              <div class="mt-4 pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                  <button id="btnPlayPause" onclick="toggleCameraPlayPause()" class="px-3.5 py-2 rounded-lg bg-[#1E293B] hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+                    <svg id="iconPause" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    <svg id="iconPlay" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    <span id="btnPlayPauseText">Pausar</span>
+                  </button>
+                </div>
+
+                <!-- Toggles OpenCV e Linhas de Zona -->
+                <div class="flex flex-wrap items-center gap-4">
+                  <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="toggleBoundingBoxes" checked class="sr-only peer" />
+                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2563EB] relative"></div>
+                    <span class="text-xs font-medium text-[#1E293B]">Bounding Boxes (OpenCV)</span>
+                  </label>
+
+                  <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="toggleZoneLines" checked class="sr-only peer" />
+                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#10B981] relative"></div>
+                    <span class="text-xs font-medium text-[#1E293B]">Linhas de Zona</span>
+                  </label>
+
+                  <label class="inline-flex items-center gap-2 select-none" title="Confiança mínima para aceitar uma detecção de pessoa">
+                    <span class="text-xs font-medium text-[#1E293B]">Confiança mín.</span>
+                    <input id="cvMinScore" type="range" min="0.30" max="0.95" step="0.01" value="0.55" class="w-24 accent-[#2563EB] cursor-pointer" />
+                    <span id="cvMinScoreVal" class="text-xs font-semibold text-[#2563EB] w-9 tabular-nums">55%</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coluna Lateral de Métricas em Tempo Real e Zonas (1/3) -->
+            <div class="space-y-4">
+              <!-- Métricas em Tempo Real -->
+              <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs">
+                <h3 class="text-sm font-bold text-[#1E293B] mb-3">Contagem em Tempo Real</h3>
+                <div class="grid grid-cols-3 gap-2.5 text-center">
+                  <div class="p-3 rounded-lg bg-blue-50/70 border border-blue-100">
+                    <span class="text-[11px] font-medium text-slate-500 block">Pessoas Agora</span>
+                    <span id="livePeopleNow" class="text-xl font-bold text-[#2563EB] mt-0.5 block">18</span>
+                  </div>
+                  <div class="p-3 rounded-lg bg-slate-50 border border-[#E2E8F0]">
+                    <span class="text-[11px] font-medium text-slate-500 block">Entradas</span>
+                    <span id="liveEntries" class="text-xl font-bold text-[#1E293B] mt-0.5 block">126</span>
+                  </div>
+                  <div class="p-3 rounded-lg bg-slate-50 border border-[#E2E8F0]">
+                    <span class="text-[11px] font-medium text-slate-500 block">Saídas</span>
+                    <span id="liveExits" class="text-xl font-bold text-[#1E293B] mt-0.5 block">103</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Barras de Progresso: Zonas Observadas -->
+              <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-bold text-[#1E293B]">Zonas Observadas</h3>
+                  <span class="text-[11px] text-slate-400">Ocupação relativa</span>
+                </div>
+
+                <!-- Zona Vitrine -->
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1">
+                    <span class="text-[#1E293B]">Vitrine</span>
+                    <span id="zoneVitrineText" class="text-[#2563EB] font-semibold">72% (13 pessoas)</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="zoneVitrineBar" class="h-full bg-[#2563EB] rounded-full transition-all duration-500" style="width: 72%"></div>
+                  </div>
+                </div>
+
+                <!-- Zona Corredor Central -->
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1">
+                    <span class="text-[#1E293B]">Corredor Central</span>
+                    <span id="zoneCorredorText" class="text-indigo-600 font-semibold">50% (9 pessoas)</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="zoneCorredorBar" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 50%"></div>
+                  </div>
+                </div>
+
+                <!-- Zona Caixa -->
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1">
+                    <span class="text-[#1E293B]">Caixa</span>
+                    <span id="zoneCaixaText" class="text-[#10B981] font-semibold">28% (5 pessoas)</span>
+                  </div>
+                  <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="zoneCaixaBar" class="h-full bg-[#10B981] rounded-full transition-all duration-500" style="width: 28%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alerta da IA na Base -->
+              <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold">
+                  !
+                </div>
+                <div>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 block">Alerta da IA</span>
+                  <p id="aiAlertText" class="text-xs font-semibold text-[#1E293B] mt-0.5">Pico de permanência detectado na vitrine.</p>
+                  <p id="aiAlertDwell" class="text-[11px] text-slate-500 mt-1"></p>
+                  <button onclick="navigateTo('mapa')" class="mt-2 text-xs font-semibold text-[#2563EB] hover:underline cursor-pointer">
+                    Abrir Mapa de Calor →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 3. TELA: MAPA (MAPA DE CALOR / DISTRIBUIÇÃO ESPACIAL)          -->
+        <!-- ============================================================== -->
+        <section id="screen-mapa" class="screen-section space-y-6">
+
+          <!-- Barra de Controle da Planta Mix -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-[#2563EB] flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-sm font-bold text-[#1E293B]">Planta Mix — Capim Dourado Shopping (2026_11_CDS_MIX.pdf)</h2>
+                  <span id="pdfStatusBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Planta Oficial Mapeada (1:1)
+                  </span>
+                </div>
+                <p id="pdfFileNameLabel" class="text-xs text-slate-500 mt-0.5">
+                  Layout técnico de 38.800,50 m² sincronizado com a camada de calor. Você também pode carregar o arquivo <strong class="text-[#1E293B]">.pdf</strong> original se desejar.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button id="btnToggleSource" onclick="toggleMapSource()" class="hidden px-3.5 py-2 rounded-lg border border-[#E2E8F0] bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-[#1E293B] transition-colors cursor-pointer">
+                Alternar CAD / PDF
+              </button>
+
+              <label for="pdfUploadInput" class="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold transition-colors shadow-xs flex items-center gap-2 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span>Importar Arquivo PDF (.pdf)</span>
+              </label>
+              <input id="pdfUploadInput" type="file" accept="application/pdf,.pdf" class="hidden" onchange="handlePdfFileSelect(event)" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Planta Baixa Interativa (2/3) -->
+            <div class="xl:col-span-2 bg-white rounded-xl border border-[#E2E8F0] p-4 sm:p-6 shadow-xs flex flex-col justify-between">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 class="text-base font-bold text-[#1E293B]">Planta Baixa & Distribuição Espacial</h2>
+                  <p class="text-xs text-slate-500">Use o scroll para zoom, arraste para mover e clique nos marcadores para detalhar o fluxo</p>
+                </div>
+
+                <!-- Seletor de Período -->
+                <div class="inline-flex rounded-lg bg-slate-100 p-1 border border-[#E2E8F0] shrink-0">
+                  <button onclick="setHeatmapPeriod('hoje')" data-period="hoje" class="hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#1E293B] shadow-2xs transition-all cursor-pointer">
+                    Hoje
+                  </button>
+                  <button onclick="setHeatmapPeriod('pico')" data-period="pico" class="hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-[#1E293B] transition-all cursor-pointer">
+                    Horário de Pico 18h
+                  </button>
+                  <button onclick="setHeatmapPeriod('manha')" data-period="manha" class="hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-[#1E293B] transition-all cursor-pointer">
+                    Manhã
+                  </button>
+                </div>
+              </div>
+
+              <!-- Controles de Camadas, Opacidade e Zoom -->
+              <div class="mb-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex flex-wrap items-center gap-4">
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none font-medium text-[#1E293B]">
+                    <input type="checkbox" id="toggleHeatLayer" checked onchange="toggleOverlayLayers()" class="rounded text-[#2563EB] focus:ring-0 cursor-pointer" />
+                    <span>Mapa de Calor</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 cursor-pointer select-none font-medium text-[#1E293B]">
+                    <input type="checkbox" id="togglePinsLayer" checked onchange="toggleOverlayLayers()" class="rounded text-[#2563EB] focus:ring-0 cursor-pointer" />
+                    <span>Pins de Fluxo</span>
+                  </label>
+                  <label class="inline-flex items-center gap-1.5 select-none text-slate-600" title="Ajustar transparência das manchas térmicas">
+                    <span>Opacidade:</span>
+                    <input type="range" id="heatOpacitySlider" min="0.2" max="1" step="0.05" value="0.88" oninput="updateHeatOpacity(this.value)" class="w-16 accent-[#2563EB] cursor-pointer" />
+                  </label>
+                </div>
+
+                <div class="inline-flex items-center gap-1 bg-slate-100 border border-[#E2E8F0] rounded-lg p-0.5">
+                  <button onclick="adjustZoom(-0.2)" class="px-2 py-1 rounded hover:bg-white text-slate-700 font-bold cursor-pointer" title="Diminuir Zoom">−</button>
+                  <span id="zoomLevelLabel" class="px-2 font-semibold text-slate-600 tabular-nums">100%</span>
+                  <button onclick="adjustZoom(0.2)" class="px-2 py-1 rounded hover:bg-white text-slate-700 font-bold cursor-pointer" title="Aumentar Zoom">+</button>
+                  <button onclick="resetZoomPan()" class="px-2 py-1 rounded hover:bg-white text-[11px] font-medium text-[#2563EB] cursor-pointer" title="Resetar Visualização">Resetar</button>
+                </div>
+              </div>
+
+              <!-- Viewport Interativo do Mapa (Proporção exata 1400:990 do PDF) -->
+              <div id="mapDropZone" class="map-viewport relative bg-white border border-slate-300 rounded-xl overflow-hidden select-none shadow-inner" style="aspect-ratio: 1400 / 990;">
+                <div id="mapTransformStage" class="w-full h-full origin-center transition-transform duration-75 relative">
+
+                  <!-- CAMADA 1A: Canvas PDF.js (quando o arquivo PDF é carregado) -->
+                  <canvas id="pdfRenderCanvas" class="hidden w-full h-full object-contain bg-white"></canvas>
+
+                  <!-- CAMADA 1B: Planta CAD Vetorial Fiel à 2026_11_CDS_MIX.pdf -->
+                  <svg id="capimVectorFloorplan" viewBox="0 0 1400 990" class="w-full h-full block bg-white">
+                    <defs>
+                      <!-- Padrão de vagas verticais de estacionamento -->
+                      <pattern id="parkingVert" width="10" height="26" patternUnits="userSpaceOnUse">
+                        <rect width="10" height="26" fill="none" stroke="#64748B" stroke-width="0.6" />
+                      </pattern>
+                      <!-- Padrão de vagas horizontais de estacionamento -->
+                      <pattern id="parkingHoriz" width="26" height="10" patternUnits="userSpaceOnUse">
+                        <rect width="26" height="10" fill="none" stroke="#64748B" stroke-width="0.6" />
+                      </pattern>
+                    </defs>
+
+                    <!-- Fundo da folha técnica -->
+                    <rect x="0" y="0" width="1400" height="990" fill="#FFFFFF" />
+
+                    <!-- Bússola Norte no topo direito (igual ao PDF) -->
+                    <g transform="translate(1175, 42)">
+                      <line x1="-22" y1="0" x2="22" y2="0" stroke="#0F172A" stroke-width="1.5" />
+                      <polygon points="-24,0 -15,-4 -15,4" fill="#0F172A" />
+                      <circle cx="0" cy="0" r="6" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.3" />
+                      <text x="0" y="3" text-anchor="middle" font-size="7" font-weight="800" fill="#0F172A">N</text>
+                    </g>
+
+                    <!-- ======================================================== -->
+                    <!-- SISTEMA VIÁRIO EXTERNO (Av. JK, Av. NS-05, Av. LO 2A)    -->
+                    <!-- ======================================================== -->
+                    <g stroke="#1E293B" stroke-width="1.2" fill="#FFFFFF">
+                      <!-- AVENIDA JK (Vertical Esquerda) -->
+                      <line x1="138" y1="335" x2="138" y2="755" />
+                      <line x1="160" y1="335" x2="160" y2="755" />
+                      <line x1="170" y1="335" x2="170" y2="755" />
+                      <line x1="192" y1="335" x2="192" y2="755" />
+
+                      <!-- AVENIDA NS-05 (Horizontal Inferior) -->
+                      <line x1="230" y1="792" x2="1165" y2="792" />
+                      <line x1="230" y1="812" x2="1165" y2="812" />
+                      <line x1="230" y1="822" x2="1165" y2="822" />
+                      <line x1="230" y1="842" x2="1165" y2="842" />
+
+                      <!-- AVENIDA LO 2A (Vertical/Diagonal Direita) -->
+                      <line x1="1212" y1="752" x2="1272" y2="35" />
+                      <line x1="1234" y1="752" x2="1294" y2="35" />
+                      <line x1="1244" y1="752" x2="1304" y2="35" />
+                      <line x1="1266" y1="752" x2="1326" y2="35" />
+
+                      <!-- ROTATÓRIA INFERIOR ESQUERDA (Av. JK x Av. NS-05) -->
+                      <circle cx="165" cy="817" r="76" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.3" />
+                      <circle cx="165" cy="817" r="42" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.3" />
+                      <!-- Saídas Oeste e Sul da Rotatória Esquerda -->
+                      <rect x="35" y="792" width="62" height="50" fill="#FFFFFF" stroke="none" />
+                      <line x1="35" y1="792" x2="96" y2="792" /><line x1="35" y1="812" x2="90" y2="812" />
+                      <line x1="35" y1="822" x2="90" y2="822" /><line x1="35" y1="842" x2="96" y2="842" />
+                      <rect x="138" y="882" width="54" height="25" fill="#FFFFFF" stroke="none" />
+                      <line x1="138" y1="882" x2="138" y2="905" /><line x1="160" y1="888" x2="160" y2="905" />
+                      <line x1="170" y1="888" x2="170" y2="905" /><line x1="192" y1="882" x2="192" y2="905" />
+
+                      <!-- ROTATÓRIA INFERIOR DIREITA (Av. NS-05 x Av. LO 2A) -->
+                      <circle cx="1235" cy="817" r="76" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.3" />
+                      <circle cx="1235" cy="817" r="42" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.3" />
+                      <!-- Saídas Leste e Sul da Rotatória Direita -->
+                      <rect x="1304" y="792" width="62" height="50" fill="#FFFFFF" stroke="none" />
+                      <line x1="1304" y1="792" x2="1365" y2="792" /><line x1="1310" y1="812" x2="1365" y2="812" />
+                      <line x1="1310" y1="822" x2="1365" y2="822" /><line x1="1304" y1="842" x2="1365" y2="842" />
+                      <rect x="1212" y="882" width="54" height="25" fill="#FFFFFF" stroke="none" />
+                      <line x1="1212" y1="882" x2="1212" y2="905" /><line x1="1234" y1="888" x2="1234" y2="905" />
+                      <line x1="1244" y1="888" x2="1244" y2="905" /><line x1="1266" y1="882" x2="1266" y2="905" />
+                    </g>
+
+                    <!-- Rótulos das Avenidas (idênticos ao PDF) -->
+                    <text x="155" y="545" text-anchor="middle" font-size="13" font-weight="700" fill="#0F172A" transform="rotate(-90 155 545)">AVENIDA JK</text>
+                    <text x="1035" y="784" text-anchor="middle" font-size="13" font-weight="700" fill="#0F172A">AVENIDA NS-05</text>
+                    <text x="1202" y="610" text-anchor="middle" font-size="13" font-weight="700" fill="#0F172A" transform="rotate(-90 1202 610)">AVENIDA LO 2A</text>
+
+                    <!-- ======================================================== -->
+                    <!-- PERÍMETRO DO TERRENO, ACESSO NORTE E ESTACIONAMENTOS     -->
+                    <!-- ======================================================== -->
+                    <!-- Limite externo do terreno do shopping -->
+                    <polygon points="240,680 240,342 865,165 1230,52 1175,728 335,728" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.3" />
+
+                    <!-- Acesso Superior Direito com Setas Vermelhas -->
+                    <g>
+                      <polygon points="1030,115 1230,52 1222,125 1030,168" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.1" />
+                      <line x1="1060" y1="126" x2="1195" y2="85" stroke="#0F172A" stroke-width="1" stroke-dasharray="6 4" />
+                      <!-- Setas vermelhas de entrada -->
+                      <polygon points="1105,98 1122,93 1120,101" fill="#DC2626" />
+                      <polygon points="1148,85 1165,80 1163,88" fill="#DC2626" />
+                      <polygon points="1115,118 1132,113 1130,121" fill="#DC2626" />
+                    </g>
+
+                    <!-- Rotatória Interna Superior (próxima ao WOW Park / Estacionamento Norte) -->
+                    <circle cx="885" cy="172" r="24" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.3" />
+                    <circle cx="885" cy="172" r="13" fill="#E2E8F0" stroke="#0F172A" stroke-width="1" />
+
+                    <!-- ESTACIONAMENTO NORTE (6 ilhas de vagas verticais acima do prédio) -->
+                    <g>
+                      <!-- Ilha 1 -->
+                      <rect x="405" y="315" width="44" height="95" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                      <!-- Ilha 2 -->
+                      <rect x="472" y="295" width="46" height="105" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                      <!-- Ilha 3 -->
+                      <rect x="542" y="275" width="46" height="90" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                      <!-- Ilha 4 -->
+                      <rect x="612" y="255" width="46" height="42" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                      <!-- Ilha 5 -->
+                      <rect x="682" y="235" width="46" height="42" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                      <!-- Ilha 6 -->
+                      <rect x="752" y="215" width="46" height="115" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                      <!-- Ilha 7 (direita) -->
+                      <rect x="822" y="202" width="46" height="175" fill="url(#parkingHoriz)" stroke="#334155" stroke-width="0.9" />
+                    </g>
+
+                    <!-- ESTACIONAMENTO SUL (Ao longo da Av. NS-05) -->
+                    <g>
+                      <rect x="362" y="685" width="205" height="32" fill="url(#parkingVert)" stroke="#334155" stroke-width="0.9" />
+                      <rect x="595" y="688" width="225" height="30" fill="url(#parkingVert)" stroke="#334155" stroke-width="0.9" />
+                      <rect x="845" y="688" width="255" height="30" fill="url(#parkingVert)" stroke="#334155" stroke-width="0.9" />
+                    </g>
+
+                    <!-- ======================================================== -->
+                    <!-- CORPO ARQUITETÔNICO DO SHOPPING (1º PAVIMENTO - TÉRREO)  -->
+                    <!-- ======================================================== -->
+                    <!-- Base Estrutural do Edifício -->
+                    <path d="M 380,455 L 435,455 L 555,345 L 635,345 L 635,295 L 748,295 L 748,345 L 825,425 L 935,425 L 935,175 L 1110,130 L 1110,665 L 835,665 L 775,682 L 690,665 L 580,685 L 445,655 A 95,95 0 0,1 380,455 Z"
+                          fill="#F1F5F9" stroke="#0F172A" stroke-width="2" />
+
+                    <!-- CORREDORES INTERNOS PRINCIPAIS (Brancos, formando o X/Diamante central + corredores leste/oeste) -->
+                    <g fill="#FFFFFF" stroke="#475569" stroke-width="0.9">
+                      <!-- Corredor Oeste (Renner -> Núcleo Central) -->
+                      <polygon points="415,542 545,542 545,558 415,558" />
+                      <!-- Diagonal Superior Esquerda (C&A / Praça Alimentação -> Renner) -->
+                      <polygon points="545,542 642,380 656,390 558,552" />
+                      <!-- Diagonal Superior Direita (Praça Alimentação / Leitura -> Corredor Leste) -->
+                      <polygon points="732,380 830,492 816,502 718,390" />
+                      <!-- Diagonal Inferior Esquerda (RCHLO -> Rotunda Central) -->
+                      <polygon points="558,552 668,615 676,602 566,540" />
+                      <!-- Diagonal Inferior Direita (RCHLO -> Rotunda Central / Ala Leste) -->
+                      <polygon points="712,602 816,502 828,514 724,614" />
+                      <!-- Corredor Leste (Núcleo Central -> STZ / Cinemark) -->
+                      <polygon points="816,502 955,502 955,518 816,518" />
+                      <!-- Corredor Vertical Leste (ao longo das lojas âncoras da direita) -->
+                      <polygon points="920,215 936,215 936,635 920,635" />
+                      <!-- Acesso Sul (ao lado do Outback) -->
+                      <polygon points="686,612 702,612 702,672 686,672" />
+                    </g>
+
+                    <!-- ======================================================== -->
+                    <!-- LOJAS ÂNCORAS E SATÉLITES (IDÊNTICAS AO PDF)              -->
+                    <!-- ======================================================== -->
+
+                    <!-- 1. ALA OESTE: RENNER (Semicírculo característico na esquerda) -->
+                    <g>
+                      <path d="M 415,470 A 85,85 0 0,0 415,640 L 415,470 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5" />
+                      <circle cx="372" cy="555" r="14" fill="#DC2626" />
+                      <text x="372" y="560" text-anchor="middle" font-size="14" font-weight="800" fill="#FFFFFF">r</text>
+                      <text x="372" y="581" text-anchor="middle" font-size="8" font-weight="800" fill="#0F172A">RENNER</text>
+
+                      <!-- Lojas satélites ao lado da Renner -->
+                      <rect x="418" y="458" width="42" height="45" fill="#FFFFFF" stroke="#334155" stroke-width="1" />
+                      <text x="439" y="482" text-anchor="middle" font-size="6.5" font-weight="700" fill="#1E293B">POLO WEAR</text>
+
+                      <rect x="462" y="458" width="38" height="45" fill="#FFFFFF" stroke="#334155" stroke-width="1" />
+                      <text x="481" y="483" text-anchor="middle" font-size="7" font-weight="700" fill="#475569">42</text>
+
+                      <!-- Pequenas lojas na base da Renner -->
+                      <rect x="422" y="565" width="36" height="24" fill="#1E293B" />
+                      <text x="440" y="580" text-anchor="middle" font-size="6" font-weight="700" fill="#FFFFFF">Boticário</text>
+                      <rect x="422" y="592" width="36" height="24" fill="#16A34A" />
+                      <text x="440" y="607" text-anchor="middle" font-size="6" font-weight="700" fill="#FFFFFF">Natura</text>
+                    </g>
+
+                    <!-- 2. ALA SUDOESTE: CENTAURO, RI HAPPY E STILO A -->
+                    <g>
+                      <!-- Ri Happy -->
+                      <rect x="502" y="512" width="42" height="36" fill="#FEF9C3" stroke="#334155" stroke-width="1" />
+                      <circle cx="523" cy="527" r="7" fill="#F59E0B" />
+                      <text x="523" y="542" text-anchor="middle" font-size="6.5" font-weight="800" fill="#DC2626">RI HAPPY</text>
+
+                      <!-- STILO A (Bloco trapezoidal inclinado) -->
+                      <polygon points="548,505 595,485 612,535 556,548" fill="#FFFFFF" stroke="#334155" stroke-width="1.1" />
+                      <text x="578" y="523" text-anchor="middle" font-size="8" font-weight="800" fill="#1E293B">STILO A</text>
+
+                      <!-- CENTAURO (Âncora inferior esquerda) -->
+                      <path d="M 465,622 L 585,622 L 585,676 L 465,656 Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.4" />
+                      <text x="528" y="654" text-anchor="middle" font-size="9.5" font-weight="800" fill="#DC2626">CENTAURO</text>
+                    </g>
+
+                    <!-- 3. NÚCLEO CENTRAL EM DIAMANTE: C&A, PRAÇA ALIMENTAÇÃO, LEITURA, RCHLO E ROTUNDA -->
+                    <g>
+                      <!-- C&A (Projeção superior central) -->
+                      <rect x="640" y="298" width="102" height="52" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5" />
+                      <ellipse cx="691" cy="324" rx="20" ry="13" fill="none" stroke="#DC2626" stroke-width="1.8" />
+                      <text x="691" y="328" text-anchor="middle" font-size="11" font-weight="800" fill="#1E293B">C&amp;A</text>
+
+                      <!-- Praça de Alimentação -->
+                      <rect x="646" y="362" width="90" height="44" fill="#FFFBEB" stroke="#64748B" stroke-width="1" />
+                      <text x="691" y="382" text-anchor="middle" font-size="6.5" font-weight="700" fill="#78350F">PRAÇA DE</text>
+                      <text x="691" y="392" text-anchor="middle" font-size="6.5" font-weight="700" fill="#78350F">ALIMENTAÇÃO</text>
+
+                      <!-- Leitura (Diagonal superior direita) -->
+                      <polygon points="755,368 808,402 794,422 742,388" fill="#EFF6FF" stroke="#334155" stroke-width="1" />
+                      <text x="776" y="399" text-anchor="middle" font-size="8.5" font-weight="800" fill="#1D4ED8">leitura</text>
+
+                      <!-- RCHLO (Grande âncora central) -->
+                      <polygon points="635,432 748,432 762,510 622,510" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.6" />
+                      <text x="692" y="472" text-anchor="middle" font-size="13" font-weight="800" fill="#0F172A">RCHLO</text>
+                      <text x="692" y="484" text-anchor="middle" font-size="6.5" font-weight="600" fill="#64748B">RIACHUELO</text>
+
+                      <!-- Rotunda / Claraboia Circular Central (Abaixo da RCHLO) -->
+                      <circle cx="692" cy="558" r="30" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.4" />
+                      <circle cx="692" cy="558" r="21" fill="none" stroke="#94A3B8" stroke-width="1" stroke-dasharray="3 2" />
+                    </g>
+
+                    <!-- 4. FACHADA SUL (Av. NS-05): CAMICADO, OUTBACK, MADERO E MARISA -->
+                    <g>
+                      <!-- Camicado -->
+                      <rect x="615" y="605" width="54" height="58" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.3" />
+                      <text x="642" y="638" text-anchor="middle" font-size="7.5" font-weight="800" fill="#DC2626">CAMICADO</text>
+
+                      <!-- Vivara (pequena acima do Outback) -->
+                      <rect x="704" y="592" width="44" height="18" fill="#FFFFFF" stroke="#334155" stroke-width="0.9" />
+                      <text x="726" y="604" text-anchor="middle" font-size="6" font-weight="700" fill="#1E293B">VIVARA</text>
+
+                      <!-- OUTBACK (Âncora sul-central) -->
+                      <rect x="704" y="612" width="56" height="54" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.4" />
+                      <text x="732" y="643" text-anchor="middle" font-size="8" font-weight="800" fill="#B91C1C">OUTBACK</text>
+
+                      <!-- MADERO (Bloco escuro saliente) -->
+                      <rect x="768" y="628" width="46" height="52" fill="#1E293B" stroke="#0F172A" stroke-width="1.3" />
+                      <text x="791" y="657" text-anchor="middle" font-size="7.5" font-weight="800" fill="#FFFFFF">MADERO</text>
+
+                      <!-- MARISA (Âncora sul-leste) -->
+                      <rect x="822" y="624" width="96" height="44" fill="#FDF2F8" stroke="#0F172A" stroke-width="1.4" />
+                      <text x="870" y="651" text-anchor="middle" font-size="11" font-weight="800" fill="#DB2777">marisa</text>
+                    </g>
+
+                    <!-- 5. MIOLO DE LOJAS SATÉLITES CENTRO-LESTE -->
+                    <g>
+                      <rect x="772" y="468" width="44" height="28" fill="#FFFFFF" stroke="#475569" stroke-width="0.9" />
+                      <text x="794" y="485" text-anchor="middle" font-size="6" font-weight="700" fill="#1E293B">Brooksfield</text>
+
+                      <rect x="825" y="522" width="46" height="22" fill="#FFFFFF" stroke="#475569" stroke-width="0.9" />
+                      <text x="848" y="536" text-anchor="middle" font-size="6" font-weight="700" fill="#1E293B">CONTÉM1G</text>
+
+                      <rect x="874" y="522" width="44" height="22" fill="#FFFFFF" stroke="#475569" stroke-width="0.9" />
+                      <text x="896" y="536" text-anchor="middle" font-size="6.5" font-weight="700" fill="#1E293B">LadyLord</text>
+
+                      <!-- Grade de lojas satélites -->
+                      <g fill="#FFFFFF" stroke="#64748B" stroke-width="0.8">
+                        <rect x="782" y="550" width="32" height="24" />
+                        <rect x="816" y="550" width="32" height="24" />
+                        <rect x="850" y="550" width="32" height="24" />
+                        <rect x="884" y="550" width="32" height="24" />
+                        <rect x="782" y="582" width="42" height="26" />
+                        <rect x="828" y="582" width="42" height="26" />
+                        <rect x="874" y="582" width="42" height="26" />
+                      </g>
+                    </g>
+
+                    <!-- 6. COLUNA VERTICAL LESTE (8 Âncoras empilhadas — idêntica ao PDF!) -->
+                    <g>
+                      <!-- MOTOFIT (Topo inclinado) -->
+                      <polygon points="942,174 1068,144 1068,172 942,196" fill="#1E293B" stroke="#0F172A" stroke-width="1.2" />
+                      <text x="1005" y="176" text-anchor="middle" font-size="8" font-weight="800" fill="#FFFFFF">MOTOFIT</text>
+
+                      <!-- WOW PARK -->
+                      <polygon points="942,198 1068,174 1068,228 942,238" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" />
+                      <text x="1005" y="210" text-anchor="middle" font-size="11" font-weight="800" fill="#7C3AED">WOW</text>
+                      <text x="1005" y="221" text-anchor="middle" font-size="7" font-weight="800" fill="#F59E0B">PARK</text>
+
+                      <!-- BIG -->
+                      <rect x="942" y="242" width="126" height="36" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" />
+                      <rect x="986" y="250" width="38" height="20" rx="4" fill="#DC2626" />
+                      <text x="1005" y="264" text-anchor="middle" font-size="10" font-weight="800" fill="#FFFFFF">BIG</text>
+
+                      <!-- ZIG ZAG -->
+                      <rect x="942" y="282" width="126" height="40" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" />
+                      <text x="1005" y="301" text-anchor="middle" font-size="9" font-weight="800" fill="#2563EB">ZIG</text>
+                      <text x="1005" y="312" text-anchor="middle" font-size="9" font-weight="800" fill="#F97316">ZAG</text>
+
+                      <!-- BIG LAR -->
+                      <rect x="942" y="326" width="126" height="42" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" />
+                      <rect x="982" y="340" width="46" height="14" rx="2" fill="#DC2626" />
+                      <text x="1005" y="350" text-anchor="middle" font-size="7.5" font-weight="800" fill="#FDE047">BIG LAR</text>
+
+                      <!-- PERNAMBUCANAS -->
+                      <rect x="942" y="372" width="126" height="42" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" />
+                      <rect x="968" y="386" width="74" height="14" fill="#FACC15" />
+                      <text x="1005" y="396" text-anchor="middle" font-size="7" font-weight="800" fill="#1E293B">PERNAMBUCANAS</text>
+
+                      <!-- AV / Academia -->
+                      <rect x="942" y="418" width="126" height="42" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.2" />
+                      <rect x="992" y="427" width="26" height="24" rx="3" fill="#0F172A" />
+                      <text x="1005" y="443" text-anchor="middle" font-size="9" font-weight="800" fill="#FACC15">AV</text>
+
+                      <!-- STZ (Studio Z) -->
+                      <rect x="942" y="464" width="126" height="42" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.3" />
+                      <text x="1005" y="490" text-anchor="middle" font-size="13" font-weight="800" fill="#0F172A">STZ</text>
+
+                      <!-- Burger King (pequena logo abaixo do corredor da STZ) -->
+                      <circle cx="964" cy="528" r="9" fill="#F59E0B" stroke="#DC2626" stroke-width="1.5" />
+                      <text x="964" y="531" text-anchor="middle" font-size="6" font-weight="800" fill="#1E293B">BK</text>
+
+                      <!-- CINEMARK (Grande âncora inferior direita) -->
+                      <rect x="942" y="544" width="126" height="114" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5" />
+                      <circle cx="1005" cy="592" r="18" fill="#DC2626" />
+                      <text x="1005" y="599" text-anchor="middle" font-size="18" font-weight="800" fill="#FFFFFF">C</text>
+                      <text x="1005" y="624" text-anchor="middle" font-size="8.5" font-weight="800" fill="#DC2626">CINEMARK</text>
+
+                      <!-- Rotunda lateral do Cinemark (igual ao PDF) -->
+                      <rect x="1072" y="520" width="38" height="125" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.1" />
+                      <circle cx="1091" cy="542" r="11" fill="none" stroke="#0F172A" stroke-width="1.1" />
+                    </g>
+
+                    <!-- ======================================================== -->
+                    <!-- CARIMBO TÉCNICO OFICIAL NA BASE (IDÊNTICO AO PDF)        -->
+                    <!-- ======================================================== -->
+                    <g transform="translate(35, 912)">
+                      <rect x="0" y="0" width="1330" height="62" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.3" />
+                      <!-- Divisórias verticais do carimbo -->
+                      <line x1="275" y1="0" x2="275" y2="62" stroke="#0F172A" stroke-width="1.1" />
+                      <line x1="415" y1="0" x2="415" y2="62" stroke="#0F172A" stroke-width="1.1" />
+                      <line x1="620" y1="0" x2="620" y2="62" stroke="#0F172A" stroke-width="1.1" />
+                      <line x1="895" y1="0" x2="895" y2="62" stroke="#0F172A" stroke-width="1.1" />
+                      <line x1="1035" y1="0" x2="1035" y2="62" stroke="#0F172A" stroke-width="1.1" />
+                      <line x1="1175" y1="0" x2="1175" y2="62" stroke="#0F172A" stroke-width="1.1" />
+
+                      <!-- Bloco 1: Pavimento -->
+                      <text x="137" y="37" text-anchor="middle" font-size="14" font-weight="800" fill="#0F172A">1º PAVIMENTO - TÉRREO</text>
+
+                      <!-- Bloco 2: Soul Malls -->
+                      <text x="345" y="30" text-anchor="middle" font-size="11" font-weight="800" fill="#0F172A">SOUL</text>
+                      <text x="345" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">MALLS</text>
+
+                      <!-- Bloco 3: Projeto -->
+                      <text x="427" y="18" font-size="8.5" font-weight="700" fill="#64748B">PROJETO:</text>
+                      <text x="517" y="42" text-anchor="middle" font-size="13" font-weight="800" fill="#0F172A">PLANTA MIX</text>
+
+                      <!-- Bloco 4: Autoria -->
+                      <text x="632" y="18" font-size="8.5" font-weight="700" fill="#64748B">AUTORIA:</text>
+                      <text x="757" y="42" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0F172A">OPERAÇÕES - CAPIM DOURADO SHOPPING</text>
+
+                      <!-- Bloco 5: Área -->
+                      <text x="907" y="18" font-size="8.5" font-weight="700" fill="#64748B">ÁREA:</text>
+                      <text x="965" y="42" text-anchor="middle" font-size="12" font-weight="800" fill="#0F172A">38.800,50 m²</text>
+
+                      <!-- Bloco 6: Data e Folha -->
+                      <line x1="1035" y1="31" x2="1175" y2="31" stroke="#0F172A" stroke-width="1" />
+                      <text x="1043" y="13" font-size="7.5" font-weight="700" fill="#64748B">DATA:</text>
+                      <text x="1105" y="25" text-anchor="middle" font-size="10" font-weight="800" fill="#0F172A">NOVEMBRO | 2026</text>
+                      <text x="1043" y="43" font-size="7.5" font-weight="700" fill="#64748B">FOLHA:</text>
+                      <text x="1105" y="55" text-anchor="middle" font-size="11" font-weight="800" fill="#0F172A">1/2</text>
+
+                      <!-- Bloco 7: Logo Capim Dourado Shopping -->
+                      <text x="1252" y="30" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0F172A">CAPIM DOURADO</text>
+                      <text x="1252" y="45" text-anchor="middle" font-size="9" font-weight="700" fill="#475569" letter-spacing="1.5">SHOPPING</text>
+                    </g>
+                  </svg>
+
+                  <!-- CAMADA 2: OVERLAY TÉRMICO & PINS (Sincronizado 1:1 com a planta e o PDF) -->
+                  <svg id="heatmapOverlaySvg" viewBox="0 0 1400 990" class="absolute inset-0 w-full h-full pointer-events-none" style="opacity: 0.88;">
+                    <defs>
+                      <radialGradient id="heatHigh" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#EF4444" stop-opacity="0.80" />
+                        <stop offset="45%" stop-color="#F97316" stop-opacity="0.48" />
+                        <stop offset="75%" stop-color="#EAB308" stop-opacity="0.20" />
+                        <stop offset="100%" stop-color="#EAB308" stop-opacity="0" />
+                      </radialGradient>
+                      <radialGradient id="heatMed" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#F97316" stop-opacity="0.68" />
+                        <stop offset="55%" stop-color="#EAB308" stop-opacity="0.34" />
+                        <stop offset="100%" stop-color="#EAB308" stop-opacity="0" />
+                      </radialGradient>
+                      <radialGradient id="heatLow" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#EAB308" stop-opacity="0.52" />
+                        <stop offset="65%" stop-color="#FDE047" stop-opacity="0.20" />
+                        <stop offset="100%" stop-color="#FDE047" stop-opacity="0" />
+                      </radialGradient>
+                    </defs>
+
+                    <g id="heatmapBlobsLayer"></g>
+                    <g id="heatmapPinsLayer" class="pointer-events-auto"></g>
+                  </svg>
+                </div>
+
+                <!-- Card Flutuante de Detalhe ao Clicar em um Marcador -->
+                <div id="pinDetailCard" class="hidden absolute bottom-3 left-3 z-20 bg-[#1E293B]/95 backdrop-blur text-white rounded-xl p-3.5 shadow-lg border border-slate-700 max-w-xs text-xs">
+                  <div class="flex items-center justify-between gap-4">
+                    <span id="pinTitle" class="font-bold text-sm text-white">Praça de Alimentação</span>
+                    <button onclick="closePinDetail()" class="text-slate-400 hover:text-white cursor-pointer">✕</button>
+                  </div>
+                  <p id="pinStats" class="text-blue-200 font-semibold mt-1">Fluxo: 482 pessoas/h • Permanência: 14m 20s</p>
+                  <p id="pinNote" class="text-slate-300 mt-1 leading-relaxed">Principal polo de convergência entre RCHLO, C&amp;A e Leitura.</p>
+                </div>
+              </div>
+
+              <!-- Legenda Baixo / Médio / Alto -->
+              <div class="mt-3 pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span class="font-semibold text-slate-600">Intensidade de Permanência (1º Pavimento — Térreo):</span>
+                <div class="flex items-center gap-4">
+                  <span class="flex items-center gap-1.5 text-slate-600">
+                    <span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Baixo
+                  </span>
+                  <span class="flex items-center gap-1.5 text-slate-600">
+                    <span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span> Médio
+                  </span>
+                  <span class="flex items-center gap-1.5 text-slate-600">
+                    <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Alto
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Painel Lateral: Insights de Fluxo (1/3) -->
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-5">
+              <div>
+                <div class="flex items-center gap-2 mb-4">
+                  <div class="w-8 h-8 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold">
+                    🔥
+                  </div>
+                  <div>
+                    <h3 class="text-base font-bold text-[#1E293B]">Insights de Fluxo</h3>
+                    <span id="hmPeriodSubtitle" class="text-xs text-slate-500">Período: Hoje (Consolidado)</span>
+                  </div>
+                </div>
+
+                <ul id="hmInsightsList" class="space-y-3"></ul>
+              </div>
+
+              <!-- Ocupação por Ala do Capim Dourado -->
+              <div class="space-y-3 pt-3 border-t border-[#E2E8F0]">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Ocupação por Ala (Planta Mix)</h4>
+                <div class="space-y-2.5 text-xs">
+                  <div>
+                    <div class="flex justify-between font-medium mb-1">
+                      <span class="text-[#1E293B]">Núcleo Central (Praça Alim. / RCHLO / C&amp;A)</span>
+                      <span id="wingCentralPct" class="text-red-600 font-bold">86%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div id="wingCentralBar" class="h-full bg-red-500 rounded-full transition-all duration-500" style="width: 86%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between font-medium mb-1">
+                      <span class="text-[#1E293B]">Fachada Sul (Outback / Madero / Marisa)</span>
+                      <span id="wingSulPct" class="text-orange-600 font-bold">71%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div id="wingSulBar" class="h-full bg-orange-500 rounded-full transition-all duration-500" style="width: 71%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between font-medium mb-1">
+                      <span class="text-[#1E293B]">Alas Oeste &amp; Leste (Renner / Cinemark / STZ)</span>
+                      <span id="wingExtPct" class="text-[#2563EB] font-bold">58%</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div id="wingExtBar" class="h-full bg-[#2563EB] rounded-full transition-all duration-500" style="width: 58%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                  <strong class="text-[#1E293B]">Nota analítica:</strong> Coordenadas agregadas anonimamente sobre a Planta Mix oficial do Capim Dourado Shopping (1º Pavimento — Térreo).
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+          
+
+        <!-- ============================================================== -->
+        <!-- 4. TELA: IA (RECOMENDAÇÕES ESTRATÉGICAS)                       -->
+        <!-- ============================================================== -->
+        <section id="screen-ia" class="screen-section hidden space-y-6">
+          <!-- Cabeçalho da Tela IA -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-[#1E293B]">3 Oportunidades Detectadas (2 rápidas • 1 estratégica)</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Hipóteses geradas a partir do cruzamento entre circulação por câmera e vendas do PDV</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="px-3 py-1.5 rounded-lg bg-blue-50 text-[#2563EB] font-semibold border border-blue-200">
+                Testes Ativos: <strong id="activeTestsCounter">0</strong>
+              </span>
+            </div>
+          </div>
+
+          <!-- Lista de 3 Cards Detalhados -->
+          <div class="space-y-4" id="iaCardsContainer">
+            <!-- Card 1 (Prioridade Alta) -->
+            <div id="ia-card-1" class="bg-white rounded-xl border border-[#E2E8F0] p-5 sm:p-6 shadow-xs transition-all">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="space-y-2 max-w-3xl">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">Prioridade Alta</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Ação Rápida</span>
+                    <span id="ia-status-1" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Aguardando Decisão</span>
+                  </div>
+                  <h3 class="text-base font-bold text-[#1E293B]">Reposicionar acessórios na vitrine</h3>
+                  <p class="text-sm text-slate-600">
+                    Realocar itens de maior interesse para a área de maior visibilidade detectada no mapa de calor.
+                  </p>
+                  <div class="pt-1 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                    <span class="flex items-center gap-1"><strong class="text-[#1E293B]">Evidência:</strong> 72% de retenção na vitrine frontal vs. 19% no fundo</span>
+                    <span class="text-[#10B981] font-semibold">Impacto estimado: +14% em conversão de vitrine</span>
+                  </div>
+                </div>
+
+                <div id="ia-actions-1" class="flex items-center gap-2.5 shrink-0">
+                  <button onclick="updateIaCardStatus(1, 'active')" class="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs">
+                    Iniciar Teste Controlado
+                  </button>
+                  <button onclick="updateIaCardStatus(1, 'rejected')" class="px-3.5 py-2.5 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 text-slate-600 text-xs sm:text-sm font-medium transition-colors cursor-pointer">
+                    Rejeitar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2 (Prioridade Média) -->
+            <div id="ia-card-2" class="bg-white rounded-xl border border-[#E2E8F0] p-5 sm:p-6 shadow-xs transition-all">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="space-y-2 max-w-3xl">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Prioridade Média</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">Ação Rápida</span>
+                    <span id="ia-status-2" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Aguardando Decisão</span>
+                  </div>
+                  <h3 class="text-base font-bold text-[#1E293B]">Ajustar equipe no horário de pico</h3>
+                  <p class="text-sm text-slate-600">
+                    Reforçar atendimento entre 14h e 18h devido ao aumento de fluxo na entrada.
+                  </p>
+                  <div class="pt-1 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                    <span class="flex items-center gap-1"><strong class="text-[#1E293B]">Evidência:</strong> Pico de 185 visitantes/h e fila no caixa após 17h30</span>
+                    <span class="text-[#10B981] font-semibold">Impacto estimado: -30% no tempo de espera</span>
+                  </div>
+                </div>
+
+                <div id="ia-actions-2" class="flex items-center gap-2.5 shrink-0">
+                  <button onclick="updateIaCardStatus(2, 'active')" class="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs">
+                    Iniciar Teste Controlado
+                  </button>
+                  <button onclick="updateIaCardStatus(2, 'rejected')" class="px-3.5 py-2.5 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 text-slate-600 text-xs sm:text-sm font-medium transition-colors cursor-pointer">
+                    Rejeitar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3 (Prioridade Baixa) -->
+            <div id="ia-card-3" class="bg-white rounded-xl border border-[#E2E8F0] p-5 sm:p-6 shadow-xs transition-all">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="space-y-2 max-w-3xl">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700">Prioridade Baixa</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">Estratégica</span>
+                    <span id="ia-status-3" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Aguardando Decisão</span>
+                  </div>
+                  <h3 class="text-base font-bold text-[#1E293B]">Criar campanha com loja vizinha</h3>
+                  <p class="text-sm text-slate-600">
+                    Desenvolver promoção conjunta no circuito cooperativo para elevar conversão.
+                  </p>
+                  <div class="pt-1 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                    <span class="flex items-center gap-1"><strong class="text-[#1E293B]">Evidência:</strong> Fluxo complementar detectado no corredor entre Moda e Calçados</span>
+                    <span class="text-[#10B981] font-semibold">Impacto estimado: +18% em visitas cruzadas</span>
+                  </div>
+                </div>
+
+                <div id="ia-actions-3" class="flex items-center gap-2.5 shrink-0">
+                  <button onclick="updateIaCardStatus(3, 'active')" class="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs">
+                    Iniciar Teste Controlado
+                  </button>
+                  <button onclick="updateIaCardStatus(3, 'rejected')" class="px-3.5 py-2.5 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 text-slate-600 text-xs sm:text-sm font-medium transition-colors cursor-pointer">
+                    Rejeitar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 5. TELA: CIRCUITO (CIRCUITO DE 3 LOJAS)                        -->
+        <!-- ============================================================== -->
+        <section id="screen-circuito" class="screen-section hidden space-y-6">
+          <!-- Banner da Missão Cooperativa -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 text-[#10B981] flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base sm:text-lg font-bold text-[#1E293B]">Missão Cooperativa: Missão Moda</h2>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Status: Ativa</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Roteiro voluntário de engajamento entre lojas parceiras com check-in via QR Code (sem compra obrigatória)</p>
+              </div>
+            </div>
+
+            <button onclick="simulateQrCheckin()" class="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 active:scale-[0.99] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>Simular Check-in por QR Code</span>
+            </button>
+          </div>
+
+          <!-- Rota Visual das 3 Lojas Conectadas -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-xs">
+            <h3 class="text-sm font-bold text-[#1E293B] mb-6">Rota Visual do Circuito Cooperativo</h3>
+
+            <div class="relative grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Linha conectora no Desktop -->
+              <div class="hidden md:block absolute top-8 left-[16%] right-[16%] h-1 bg-slate-200 z-0">
+                <div class="h-full bg-[#10B981] w-1/2 rounded-full"></div>
+              </div>
+
+              <!-- Loja 1 — Roupas (Você - Concluído) -->
+              <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-50 border-2 border-[#10B981] text-[#10B981] flex items-center justify-center shadow-xs">
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="mt-4 w-full p-4 rounded-xl bg-emerald-50/40 border border-emerald-200">
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 mb-1.5">
+                    Você • Concluído
+                  </span>
+                  <h4 class="text-sm font-bold text-[#1E293B]">Loja 1 — Roupas</h4>
+                  <p class="text-xs text-slate-500 mt-1">Corredor Central • Ponto de partida</p>
+                </div>
+              </div>
+
+              <!-- Loja 2 — Calçados (Em andamento) -->
+              <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-blue-50 border-2 border-[#2563EB] text-[#2563EB] flex items-center justify-center shadow-xs">
+                  <span class="font-bold text-lg">02</span>
+                </div>
+                <div class="mt-4 w-full p-4 rounded-xl bg-blue-50/40 border border-blue-200">
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-[#2563EB] mb-1.5">
+                    Em andamento
+                  </span>
+                  <h4 class="text-sm font-bold text-[#1E293B]">Loja 2 — Calçados</h4>
+                  <p class="text-xs text-slate-500 mt-1">Ala Norte • 45m de distância</p>
+                </div>
+              </div>
+
+              <!-- Loja 3 — Acessórios (Pendente) -->
+              <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-slate-50 border-2 border-slate-300 text-slate-500 flex items-center justify-center">
+                  <span class="font-bold text-lg">03</span>
+                </div>
+                <div class="mt-4 w-full p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700 mb-1.5">
+                    Pendente
+                  </span>
+                  <h4 class="text-sm font-bold text-[#1E293B]">Loja 3 — Acessórios</h4>
+                  <p class="text-xs text-slate-500 mt-1">Praça Central • Resgate do prêmio</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicadores e Histórico Recente de Check-ins -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Engajamento Diário</span>
+                <div class="mt-2 flex items-baseline gap-2">
+                  <span id="circuitoCompletionsCount" class="text-3xl font-bold text-[#1E293B]">42</span>
+                  <span class="text-sm font-medium text-slate-600">Clientes Completaram o Circuito Hoje</span>
+                </div>
+                <p class="text-xs text-[#10B981] font-semibold mt-1.5">↑ +16% comparado à média da semana</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Benefício Configurado</span>
+                <div class="mt-2">
+                  <span class="text-xl font-bold text-[#2563EB]">Recompensa: Cupom de 15% + Pontos</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1.5">Válido nas 3 lojas participantes após o 3º check-in QR Code</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 text-xl">
+                🎁
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 6. TELA: RELATÓRIOS (ANALYTICS ANTES X DEPOIS)                 -->
+        <!-- ============================================================== -->
+        <section id="screen-relatorios" class="screen-section hidden space-y-6">
+          <!-- Cabeçalho com Filtro de Período -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-[#1E293B]">Analytics Comparativo: Antes x Depois das Ações</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Avaliação controlada dos testes de vitrine, equipe e circuitos cooperativos</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label for="reportPeriodSelect" class="text-xs font-medium text-slate-500">Período:</label>
+              <select id="reportPeriodSelect" onchange="updateReportPeriod()" class="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 py-2 text-xs font-semibold text-[#1E293B] focus:outline-none cursor-pointer">
+                <option value="30d">Últimos 30 dias</option>
+                <option value="14d">Últimos 14 dias</option>
+                <option value="7d">Últimos 7 dias</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Cards de Impacto -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Impacto em Visitas</span>
+                <div class="mt-2 flex items-baseline gap-2.5">
+                  <span id="repVisitasImpact" class="text-3xl font-bold text-[#10B981]">+18%</span>
+                  <span class="text-xs text-slate-500">após ativação das recomendações</span>
+                </div>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-[#10B981] border border-emerald-200">Crescimento Validado</span>
+            </div>
+
+            <div class="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-xs flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Impacto em Conversão</span>
+                <div class="mt-2 flex items-baseline gap-2.5">
+                  <span id="repConversaoImpact" class="text-3xl font-bold text-[#10B981]">+3,2 p.p.</span>
+                  <span class="text-xs text-slate-500">de 12,7% para 15,9%</span>
+                </div>
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-[#10B981] border border-emerald-200">Acima da Meta</span>
+            </div>
+          </div>
+
+          <!-- Gráfico de Barras Comparativo (Antes vs Depois) -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] p-6 shadow-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+              <h3 class="text-sm font-bold text-[#1E293B]">Comparativo de Indicadores da Loja (Antes vs Depois)</h3>
+              <div class="flex items-center gap-4 text-xs font-medium">
+                <span class="flex items-center gap-1.5 text-slate-500">
+                  <span class="w-3 h-3 rounded-xs bg-slate-300 inline-block"></span> Antes da Ação
+                </span>
+                <span class="flex items-center gap-1.5 text-[#1E293B]">
+                  <span class="w-3 h-3 rounded-xs bg-[#2563EB] inline-block"></span> Depois da Ação
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
+              <!-- Grupo 1: Fluxo -->
+              <div class="bg-[#F8FAFC] rounded-xl p-5 border border-[#E2E8F0] flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-bold text-[#1E293B]">Fluxo</span>
+                  <span class="text-xs font-bold text-[#10B981] bg-emerald-50 px-2 py-0.5 rounded">+18,1%</span>
+                </div>
+                <div class="h-44 flex items-end justify-center gap-6 border-b border-slate-200 pb-2">
+                  <div class="flex flex-col items-center gap-1.5 w-16">
+                    <span id="barFluxoAntesVal" class="text-xs font-semibold text-slate-500">720</span>
+                    <div id="barFluxoAntes" class="w-12 bg-slate-300 rounded-t-md transition-all duration-500" style="height: 110px;"></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-1.5 w-16">
+                    <span id="barFluxoDepoisVal" class="text-xs font-bold text-[#2563EB]">850</span>
+                    <div id="barFluxoDepois" class="w-12 bg-[#2563EB] rounded-t-md transition-all duration-500" style="height: 135px;"></div>
+                  </div>
+                </div>
+                <div class="flex justify-center gap-6 mt-2 text-[11px] font-medium text-slate-500">
+                  <span class="w-16 text-center">Antes</span>
+                  <span class="w-16 text-center text-[#1E293B] font-semibold">Depois</span>
+                </div>
+              </div>
+
+              <!-- Grupo 2: Permanência -->
+              <div class="bg-[#F8FAFC] rounded-xl p-5 border border-[#E2E8F0] flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-bold text-[#1E293B]">Permanência</span>
+                  <span class="text-xs font-bold text-[#10B981] bg-emerald-50 px-2 py-0.5 rounded">+21,4%</span>
+                </div>
+                <div class="h-44 flex items-end justify-center gap-6 border-b border-slate-200 pb-2">
+                  <div class="flex flex-col items-center gap-1.5 w-16">
+                    <span id="barPermAntesVal" class="text-xs font-semibold text-slate-500">420</span>
+                    <div id="barPermAntes" class="w-12 bg-slate-300 rounded-t-md transition-all duration-500" style="height: 75px;"></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-1.5 w-16">
+                    <span id="barPermDepoisVal" class="text-xs font-bold text-[#2563EB]">510</span>
+                    <div id="barPermDepois" class="w-12 bg-[#2563EB] rounded-t-md transition-all duration-500" style="height: 96px;"></div>
+                  </div>
+                </div>
+                <div class="flex justify-center gap-6 mt-2 text-[11px] font-medium text-slate-500">
+                  <span class="w-16 text-center">Antes</span>
+                  <span class="w-16 text-center text-[#1E293B] font-semibold">Depois</span>
+                </div>
+              </div>
+
+              <!-- Grupo 3: Vendas -->
+              <div class="bg-[#F8FAFC] rounded-xl p-5 border border-[#E2E8F0] flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm font-bold text-[#1E293B]">Vendas</span>
+                  <span class="text-xs font-bold text-[#10B981] bg-emerald-50 px-2 py-0.5 rounded">+21,1%</span>
+                </div>
+                <div class="h-44 flex items-end justify-center gap-6 border-b border-slate-200 pb-2">
+                  <div class="flex flex-col items-center gap-1.5 w-16">
+                    <span id="barVendasAntesVal" class="text-xs font-semibold text-slate-500">190</span>
+                    <div id="barVendasAntes" class="w-12 bg-slate-300 rounded-t-md transition-all duration-500" style="height: 45px;"></div>
+                  </div>
+                  <div class="flex flex-col items-center gap-1.5 w-16">
+                    <span id="barVendasDepoisVal" class="text-xs font-bold text-[#10B981]">230</span>
+                    <div id="barVendasDepois" class="w-12 bg-[#10B981] rounded-t-md transition-all duration-500" style="height: 62px;"></div>
+                  </div>
+                </div>
+                <div class="flex justify-center gap-6 mt-2 text-[11px] font-medium text-slate-500">
+                  <span class="w-16 text-center">Antes</span>
+                  <span class="w-16 text-center text-[#1E293B] font-semibold">Depois</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabela de Campanhas Avaliadas -->
+          <div class="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden shadow-xs">
+            <div class="px-6 py-4 border-b border-[#E2E8F0]">
+              <h3 class="text-sm font-bold text-[#1E293B]">Campanhas Avaliadas</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    <th class="py-3 px-6">Campanha / Intervenção</th>
+                    <th class="py-3 px-6">Área de Aplicação</th>
+                    <th class="py-3 px-6">Variação Observada</th>
+                    <th class="py-3 px-6">Resultado</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[#E2E8F0] text-sm">
+                  <tr class="hover:bg-slate-50/70">
+                    <td class="py-3.5 px-6 font-semibold text-[#1E293B]">Circuito Moda</td>
+                    <td class="py-3.5 px-6 text-slate-600">Ações cooperativas no corredor central</td>
+                    <td class="py-3.5 px-6 text-[#10B981] font-semibold">+18% fluxo cruzado</td>
+                    <td class="py-3.5 px-6">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                        Positivo
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-slate-50/70">
+                    <td class="py-3.5 px-6 font-semibold text-[#1E293B]">Nova Vitrine</td>
+                    <td class="py-3.5 px-6 text-slate-600">Vitrine de entrada (Categoria Acessórios)</td>
+                    <td class="py-3.5 px-6 text-slate-600">Coletando amostra (Dia 4 de 7)</td>
+                    <td class="py-3.5 px-6">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                        Em análise
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Nota de Transparência Metodológica e LGPD no Rodapé -->
+          <div class="bg-slate-100/80 border border-[#E2E8F0] rounded-xl p-4 sm:p-5 text-xs text-slate-600 leading-relaxed flex items-start gap-3">
+            <svg class="w-5 h-5 text-[#2563EB] shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <div>
+              <strong class="text-[#1E293B] block mb-0.5">Transparência Metodológica & Conformidade LGPD:</strong>
+              Os comparativos Antes x Depois utilizam janelas equivalentes de dias da semana para evitar atribuição de causalidade sem evidência estatística. Todo o processamento visual ocorre de forma agregada e anonimizada, sem armazenamento de imagens brutas, reconhecimento facial ou inferência de dados pessoais sensíveis.
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Container de Notificações Toast (Sem alert/confirm) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- SCRIPT PRINCIPAL DE INTERATIVIDADE E VISÃO COMPUTACIONAL SIMULADA -->
+  <script>
+    // =========================================================================
+    // 1. ESTADO GLOBAL E NAVEGAÇÃO ENTRE AS 6 TELAS
+    // =========================================================================
+    const screenTitles = {
+      painel: {
+        title: 'Painel — Visão Geral da Loja',
+        subtitle: 'Indicadores consolidados de fluxo, interações e conversão em tempo real'
+      },
+      cameras: {
+        title: 'Câmeras — Monitoramento & Teste de Vídeo',
+        subtitle: 'Validação de detecção de pessoas e zonas observadas (COCO-SSD / TensorFlow.js + Simulação Demo)'
+      },
+      mapa: {
+        title: 'Mapa — Distribuição Espacial & Mapa de Calor',
+        subtitle: 'Análise agregada de circulação e permanência por setor da loja'
+      },
+      ia: {
+        title: 'IA — Recomendações Estratégicas',
+        subtitle: 'Sugestões acionáveis baseadas em evidências de fluxo e vendas'
+      },
+      circuito: {
+        title: 'Circuito — Circuito Cooperativo de 3 Lojas',
+        subtitle: 'Gestão de missões integradas e check-ins voluntários via QR Code'
+      },
+      relatorios: {
+        title: 'Relatórios — Analytics Antes x Depois',
+        subtitle: 'Medição de resultados das intervenções e transparência metodológica'
+      }
+    };
+
+    let currentScreen = 'painel';
+
+    function navigateTo(screenId, highlightFirstIa = false) {
+      currentScreen = screenId;
+
+      // Esconde todas as seções e exibe a escolhida
+      document.querySelectorAll('.screen-section').forEach(sec => {
+        sec.classList.add('hidden');
+      });
+      const target = document.getElementById(`screen-${screenId}`);
+      if (target) target.classList.remove('hidden');
+
+      // Atualiza estado ativo dos botões da sidebar
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isMatch = btn.getAttribute('data-screen') === screenId;
+        if (isMatch) {
+          btn.classList.remove('text-slate-600', 'hover:bg-slate-50', 'hover:text-[#1E293B]');
+          btn.classList.add('bg-blue-50', 'text-[#2563EB]');
+        } else {
+          btn.classList.remove('bg-blue-50', 'text-[#2563EB]');
+          btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'hover:text-[#1E293B]');
+        }
+      });
+
+      // Atualiza títulos do cabeçalho
+      if (screenTitles[screenId]) {
+        document.getElementById('headerTitle').textContent = screenTitles[screenId].title;
+        document.getElementById('headerSubtitle').textContent = screenTitles[screenId].subtitle;
+      }
+
+      // Fecha sidebar no mobile
+      toggleMobileSidebar(false);
+
+      // Se veio do banner de oportunidade da IA, destaca brevemente o Card 1
+      if (screenId === 'ia' && highlightFirstIa) {
+        const card1 = document.getElementById('ia-card-1');
+        if (card1) {
+          card1.classList.add('ring-2', 'ring-[#2563EB]');
+          setTimeout(() => card1.classList.remove('ring-2', 'ring-[#2563EB]'), 2200);
+        }
+      }
+
+      // Garante redimensionamento correto dos canvas na tela de câmeras
+      if (screenId === 'cameras') {
+        resizeCameraCanvases();
+        ensureCvModel();
+      }
+    }
+
+    function toggleMobileSidebar(open) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function handleStoreChange() {
+      const val = document.getElementById('storeSelector').value;
+      showToast(`Contexto alterado para: ${val}`, 'info');
+    }
+
+    // =========================================================================
+    // 2. SISTEMA DE NOTIFICAÇÕES TOAST (SUBSTITUI ALERT)
+    // =========================================================================
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      const colors = {
+        success: 'bg-[#1E293B] text-white border-emerald-500/50',
+        info: 'bg-[#1E293B] text-white border-blue-500/50',
+        warning: 'bg-[#1E293B] text-white border-amber-500/50'
+      };
+      const dotColor = {
+        success: 'bg-[#10B981]',
+        info: 'bg-[#2563EB]',
+        warning: 'bg-amber-400'
+      };
+
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-xs sm:text-sm font-medium transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dotColor[type] || dotColor.info}"></span>
+        <span class="flex-1">${message}</span>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3400);
+    }
+
+    // =========================================================================
+    // 3. GRÁFICO DE LINHA INTERATIVO DO PAINEL (10h ÀS 22h)
+    // =========================================================================
+    function renderPainelLineChart() {
+      const svg = document.getElementById('painelLineChart');
+      const data = [
+        { hour: '10h', visitors: 48 },
+        { hour: '11h', visitors: 65 },
+        { hour: '12h', visitors: 92 },
+        { hour: '13h', visitors: 110 },
+        { hour: '14h', visitors: 124 },
+        { hour: '15h', visitors: 138 },
+        { hour: '16h', visitors: 156 },
+        { hour: '17h', visitors: 172 },
+        { hour: '18h', visitors: 185 },
+        { hour: '19h', visitors: 164 },
+        { hour: '20h', visitors: 142 },
+        { hour: '21h', visitors: 115 },
+        { hour: '22h', visitors: 78 }
+      ];
+
+      const width = 860;
+      const height = 250;
+      const padLeft = 44;
+      const padRight = 24;
+      const padTop = 24;
+      const padBottom = 34;
+      const chartW = width - padLeft - padRight;
+      const chartH = height - padTop - padBottom;
+      const maxVal = 200;
+
+      const points = data.map((d, i) => {
+        const x = padLeft + (i / (data.length - 1)) * chartW;
+        const y = padTop + chartH - (d.visitors / maxVal) * chartH;
+        return { ...d, x, y };
+      });
+
+      const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+      const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${(padTop + chartH).toFixed(1)} L ${points[0].x.toFixed(1)} ${(padTop + chartH).toFixed(1)} Z`;
+
+      let gridLines = '';
+      [0, 50, 100, 150, 200].forEach(val => {
+        const y = padTop + chartH - (val / maxVal) * chartH;
+        gridLines += `
+          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#E2E8F0" stroke-dasharray="4 4" />
+          <text x="${padLeft - 10}" y="${y + 4}" text-anchor="end" font-size="11" fill="#94A3B8">${val}</text>
+        `;
+      });
+
+      let xLabels = '';
+      let circles = '';
+      points.forEach((p, idx) => {
+        xLabels += `<text x="${p.x}" y="${height - 10}" text-anchor="middle" font-size="11" font-weight="500" fill="#64748B">${p.hour}</text>`;
+        circles += `
+          <g class="cursor-pointer group" onmouseenter="showChartTooltip(event, '${p.hour}', ${p.visitors})" onmouseleave="hideChartTooltip()">
+            <circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent" />
+            <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.5" class="transition-all duration-150 group-hover:r-6" />
+          </g>
+        `;
+      });
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="painelAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2563EB" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#2563EB" stop-opacity="0.0" />
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        <path d="${areaPath}" fill="url(#painelAreaGrad)" />
+        <path d="${linePath}" fill="none" stroke="#2563EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        ${xLabels}
+        ${circles}
+      `;
+    }
+
+    function showChartTooltip(evt, hour, visitors) {
+      const tooltip = document.getElementById('painelChartTooltip');
+      const container = tooltip.parentElement.getBoundingClientRect();
+      document.getElementById('tooltipHour').textContent = `Horário: ${hour}`;
+      document.getElementById('tooltipValue').textContent = `${visitors} visitantes detectados`;
+
+      tooltip.classList.remove('hidden');
+      const leftPos = Math.min(Math.max(evt.clientX - container.left - 55, 10), container.width - 150);
+      const topPos = Math.max(evt.clientY - container.top - 58, 6);
+      tooltip.style.left = `${leftPos}px`;
+      tooltip.style.top = `${topPos}px`;
+    }
+
+    function hideChartTooltip() {
+      document.getElementById('painelChartTooltip').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 4. MOTOR DE VISÃO COMPUTACIONAL (COCO-SSD REAL NO NAVEGADOR + SIMULAÇÃO DEMO)
+    // =========================================================================
+    let camMode = 'demo'; // 'demo' ou 'video'
+    let camPlaying = true;
+    let currentVideoUrl = null;
+    let frameCounter = 0;
+
+    // ---- Valores iniciais da Simulação Demo (restaurados ao voltar para a demo) ----
+    const DEMO_INITIAL_METRICS = { peopleNow: 18, entries: 126, exits: 103 };
+    const DEMO_INITIAL_ZONES = {
+      vitrine: { pct: 72, n: 13 },
+      corredor: { pct: 50, n: 9 },
+      caixa: { pct: 28, n: 5 }
+    };
+    const DEMO_ALERT_TEXT = 'Pico de permanência detectado na vitrine.';
+    const CAM_TAG_DEFAULT_CLASS = 'text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600';
+    const CAM_TAG_ACTIVE_CLASS = 'text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200';
+
+    let metricsState = { ...DEMO_INITIAL_METRICS };
+
+    // Atores simulados na cena da loja (coordenadas normalizadas 0..1)
+    const simActors = [
+      { id: '01', conf: 98, x: 0.24, y: 0.66, vx: 0.0014, vy: -0.0005, w: 0.075, h: 0.22, color: '#10B981' },
+      { id: '02', conf: 95, x: 0.48, y: 0.56, vx: -0.0011, vy: 0.0008, w: 0.070, h: 0.20, color: '#2563EB' },
+      { id: '03', conf: 92, x: 0.68, y: 0.62, vx: -0.0015, vy: -0.0004, w: 0.072, h: 0.21, color: '#2563EB' },
+      { id: '04', conf: 96, x: 0.36, y: 0.48, vx: 0.0012, vy: 0.0004, w: 0.062, h: 0.18, color: '#10B981' },
+      { id: '05', conf: 91, x: 0.78, y: 0.50, vx: -0.0009, vy: 0.0006, w: 0.064, h: 0.18, color: '#F59E0B' }
+    ];
+
+    // ---- Configuração da Visão Computacional real ----
+    const CV_CFG = {
+      minScore: 0.55,        // confiança mínima (ajustável pelo slider)
+      maxDetections: 40,
+      minBoxH: 0.05,         // altura mínima da caixa (fração do quadro) p/ descartar ruído
+      confirmHits: 3,        // nº de detecções para confirmar uma pessoa (filtra falsos positivos)
+      lostSecMid: 2.5,       // tempo (s de vídeo) até considerar que a pessoa saiu (perdida no meio da cena)
+      lostSecEdge: 0.8,      // idem, quando a pessoa sumiu junto à borda do quadro
+      lostSecTentative: 0.8, // trilhas ainda não confirmadas expiram rápido
+      dwellAlertSec: 4,      // permanência (parado) na vitrine que dispara o alerta
+      concentrationAlert: 0.60
+    };
+
+    // Zonas em coordenadas normalizadas do QUADRO do vídeo (0..1). Contíguas, com leve perspectiva.
+    const CV_ZONES = [
+      {
+        key: 'vitrine', name: 'Vitrine', label: 'ZONA VITRINE', color: '#38BDF8', fill: 'rgba(56, 189, 248, 0.10)',
+        poly: [[0.02, 0.22], [0.34, 0.22], [0.30, 0.97], [0.02, 0.97]], labelAt: [0.04, 0.90],
+        textId: 'zoneVitrineText', barId: 'zoneVitrineBar'
+      },
+      {
+        key: 'corredor', name: 'Corredor Central', label: 'CORREDOR CENTRAL', color: '#10B981', fill: 'rgba(16, 185, 129, 0.08)',
+        poly: [[0.34, 0.22], [0.66, 0.22], [0.72, 0.97], [0.30, 0.97]], labelAt: [0.38, 0.90],
+        textId: 'zoneCorredorText', barId: 'zoneCorredorBar'
+      },
+      {
+        key: 'caixa', name: 'Caixa', label: 'CAIXA', color: '#FBBF24', fill: 'rgba(251, 191, 36, 0.09)',
+        poly: [[0.66, 0.22], [0.98, 0.22], [0.98, 0.97], [0.72, 0.97]], labelAt: [0.76, 0.90],
+        textId: 'zoneCaixaText', barId: 'zoneCaixaBar'
+      }
+    ];
+
+    const CV_COLORS = ['#10B981', '#2563EB', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444', '#84CC16'];
+
+    const cv = {
+      model: null,
+      status: 'idle',        // idle | loading | ready | error
+      loadPromise: null,
+      tracks: [],
+      nextId: 1,
+      entries: 0,
+      exits: 0,
+      lastT: 0,
+      session: 0,            // muda a cada novo vídeo/reinício (descarta resultados antigos em voo)
+      busy: false,
+      token: 0,
+      loopActive: false,
+      pendingAutoplay: false,
+      dpr: 1
+    };
+
+    // ---- Utilidades ----
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function fmtDur(s) {
+      s = Math.max(0, Math.floor(s));
+      if (s < 60) return `${s}s`;
+      return `${Math.floor(s / 60)}m ${pad2(s % 60)}s`;
+    }
+    function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+
+    function resizeCameraCanvases() {
+      const simCanvas = document.getElementById('simSceneCanvas');
+      const ovCanvas = document.getElementById('cvOverlayCanvas');
+      if (!simCanvas || !ovCanvas) return;
+      const rect = ovCanvas.parentElement.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        cv.dpr = dpr;
+        simCanvas.width = Math.round(rect.width);
+        simCanvas.height = Math.round(rect.height);
+        // Overlay em alta resolução (nítido em telas retina), alinhado ao viewport do vídeo
+        ovCanvas.width = Math.round(rect.width * dpr);
+        ovCanvas.height = Math.round(rect.height * dpr);
+      }
+    }
+
+    // Retângulo (em px do canvas) realmente ocupado pelo quadro do vídeo dentro do viewport (object-contain)
+    function getVideoRect(w, h) {
+      const v = document.getElementById('cameraVideoPlayer');
+      if (!v || !v.videoWidth || !v.videoHeight) return null;
+      const s = Math.min(w / v.videoWidth, h / v.videoHeight);
+      const dw = v.videoWidth * s, dh = v.videoHeight * s;
+      return { x: (w - dw) / 2, y: (h - dh) / 2, w: dw, h: dh };
+    }
+
+    // =========================================================================
+    // 4.1 CARREGAMENTO DO MODELO (TensorFlow.js + COCO-SSD)
+    // =========================================================================
+    function setAiStatus(state, msg) {
+      cv.status = state;
+      const chip = document.getElementById('aiModelStatus');
+      if (!chip) return;
+      clearTimeout(setAiStatus._t);
+      if (state === 'loading') {
+        chip.className = 'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] border border-blue-100';
+        chip.innerHTML = `<svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" opacity="0.25"/><path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>Carregando modelo de IA…</span>`;
+      } else if (state === 'ready') {
+        chip.className = 'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100';
+        chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Modelo de IA pronto</span>`;
+        setAiStatus._t = setTimeout(() => { chip.className = 'hidden'; }, 3000);
+      } else if (state === 'error') {
+        chip.className = 'inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200';
+        chip.innerHTML = `<span>IA indisponível — use a Simulação Demo</span>`;
+        chip.title = msg || '';
+      } else {
+        chip.className = 'hidden';
+      }
+      updateCamBadge();
+    }
+
+    function ensureCvModel() {
+      if (cv.loadPromise) return cv.loadPromise;
+      cv.loadPromise = loadCvModel();
+      return cv.loadPromise;
+    }
+
+    async function loadCvModel() {
+      setAiStatus('loading');
+      try {
+        if (typeof tf === 'undefined' || typeof cocoSsd === 'undefined') {
+          throw new Error('Bibliotecas TensorFlow.js / COCO-SSD não carregaram (verifique a conexão com a internet/CDN).');
+        }
+        await tf.ready();
+        cv.model = await cocoSsd.load({ base: 'mobilenet_v2' });
+        // Aquecimento: compila os shaders WebGL para que a primeira detecção real não trave
+        try {
+          const c = document.createElement('canvas');
+          c.width = c.height = 128;
+          await cv.model.detect(c, 1, 0.9);
+        } catch (e) { /* aquecimento é opcional */ }
+        setAiStatus('ready');
+      } catch (err) {
+        console.error('[NEXO] Falha ao carregar o modelo COCO-SSD:', err);
+        cv.model = null;
+        cv.loadPromise = null; // permite nova tentativa
+        setAiStatus('error', err && err.message);
+        showToast('Não foi possível carregar o modelo de IA. A Simulação Demo continua disponível.', 'warning');
+      }
+      onModelSettled();
+    }
+
+    function onModelSettled() {
+      if (camMode === 'video' && cv.pendingAutoplay) {
+        cv.pendingAutoplay = false;
+        const videoEl = document.getElementById('cameraVideoPlayer');
+        camPlaying = true;
+        updatePlayPauseUI();
+        videoEl.play().catch(() => { camPlaying = false; updatePlayPauseUI(); });
+      }
+      updateCamBadge();
+      syncDetectionLoop();
+    }
+
+    // Selo da câmera
+    function updateCamBadge() {
+      const tag = document.getElementById('camModeTag');
+      if (!tag) return;
+      if (camMode === 'demo') {
+        tag.className = CAM_TAG_DEFAULT_CLASS;
+        tag.textContent = 'OpenCV YOLOv8-Nano (Simulado)';
+      } else if (cv.model) {
+        tag.className = CAM_TAG_ACTIVE_CLASS;
+        tag.textContent = 'Visão Computacional Ativa (COCO-SSD)';
+      } else if (cv.status === 'error') {
+        tag.className = CAM_TAG_DEFAULT_CLASS;
+        tag.textContent = 'Vídeo Local • IA indisponível';
+      } else {
+        tag.className = CAM_TAG_DEFAULT_CLASS;
+        tag.textContent = 'Vídeo Local • Inicializando IA…';
+      }
+    }
+
+    // =========================================================================
+    // 4.2 RASTREADOR POR CENTROIDE + ZONAS + PERMANÊNCIA
+    // =========================================================================
+    function pointInPoly(px, py, poly) {
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+        if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) inside = !inside;
+      }
+      return inside;
+    }
+
+    // Zona em que um ponto (pés da pessoa, coordenadas normalizadas) está; null = fora das zonas
+    function zoneAtPoint(nx, ny) {
+      const x = clamp(nx, 0.025, 0.975);   // pessoa cortada pela borda do quadro continua contando
+      const y = Math.min(ny, 0.965);
+      for (const z of CV_ZONES) {
+        if (pointInPoly(x, y, z.poly)) return z.key;
+      }
+      return null;
+    }
+
+    function boxIoU(a, b) {
+      const x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y);
+      const x2 = Math.min(a.x + a.w, b.x + b.w), y2 = Math.min(a.y + a.h, b.y + b.h);
+      const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+      const uni = a.w * a.h + b.w * b.h - inter;
+      return uni > 0 ? inter / uni : 0;
+    }
+
+    function emptyZoneStats() {
+      const s = {};
+      CV_ZONES.forEach(z => { s[z.key] = { count: 0, maxDwell: 0, lingering: 0, maxStill: 0 }; });
+      return s;
+    }
+
+    // Zera contadores, trilhas, IDs e tempos de permanência (novo vídeo ou reinício)
+    function resetCvSession() {
+      cv.session++;
+      cv.tracks = [];
+      cv.nextId = 1;
+      cv.entries = 0;
+      cv.exits = 0;
+      cv.lastT = 0;
+      if (camMode === 'video') renderCvMetrics(0, emptyZoneStats());
+    }
+
+    function applyDetection(tr, d, t) {
+      tr.x = d.x; tr.y = d.y; tr.w = d.w; tr.h = d.h;
+      tr.cx = d.cx; tr.cy = d.cy;
+      tr.score = d.score;
+      tr.lastSeenT = t;
+      tr.hits++;
+      tr.matched = true;
+      tr.edge = d.x < 0.03 || d.x + d.w > 0.97 || d.y + d.h > 0.97;
+      if (!tr.confirmed && tr.hits >= CV_CFG.confirmHits) {
+        tr.confirmed = true;
+        cv.entries++; // nova pessoa rastreada entrou na área monitorada
+      }
+    }
+
+    function newTrack(d, t) {
+      const tr = {
+        id: cv.nextId++, x: 0, y: 0, w: 0, h: 0, cx: 0, cy: 0, score: 0,
+        hits: 0, confirmed: false, matched: false, edge: false,
+        firstT: t, lastSeenT: t,
+        zone: undefined, zoneSince: t, anchor: null, anchorT: t, stillSec: 0, dwellSec: 0
+      };
+      applyDetection(tr, d, t);
+      return tr;
+    }
+
+    // Associação por proximidade de centroide (guloso, menor distância primeiro). Sem reconhecimento facial.
+    function updateTracker(dets, t, vw, vh) {
+      const tracks = cv.tracks;
+      tracks.forEach(tr => { tr.matched = false; });
+
+      const pairs = [];
+      tracks.forEach((tr, ti) => {
+        const dt = Math.max(0, t - tr.lastSeenT);
+        dets.forEach((d, di) => {
+          const dist = Math.hypot((d.cx - tr.cx) * vw, (d.cy - tr.cy) * vh);
+          const H = Math.max(tr.h, d.h) * vh;
+          const allowed = H * (0.45 + 0.8 * Math.min(dt, 1.5)); // tolera mais deslocamento se ficou um tempo sem ser vista
+          if (dist <= allowed) pairs.push({ ti, di, score: dist / H });
+        });
+      });
+      pairs.sort((a, b) => a.score - b.score);
+
+      const usedT = new Set(), usedD = new Set();
+      for (const p of pairs) {
+        if (usedT.has(p.ti) || usedD.has(p.di)) continue;
+        usedT.add(p.ti); usedD.add(p.di);
+        applyDetection(tracks[p.ti], dets[p.di], t);
+      }
+      dets.forEach((d, di) => { if (!usedD.has(di)) tracks.push(newTrack(d, t)); });
+
+      // Expiração: quem some da cena gera uma "Saída" (se já havia sido confirmado como pessoa)
+      cv.tracks = tracks.filter(tr => {
+        if (tr.matched) return true;
+        const limit = !tr.confirmed ? CV_CFG.lostSecTentative : (tr.edge ? CV_CFG.lostSecEdge : CV_CFG.lostSecMid);
+        if (t - tr.lastSeenT > limit) {
+          if (tr.confirmed) cv.exits++;
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Zona atual, tempo na zona e tempo "parado" de cada pessoa visível; agrega por zona
+    function updateDwell(t, vw, vh) {
+      const stats = emptyZoneStats();
+      let people = 0;
+      cv.tracks.forEach(tr => {
+        if (!tr.matched || !tr.confirmed) return;
+        people++;
+        const fx = tr.cx, fy = tr.y + tr.h; // ponto central inferior (pés)
+        const z = zoneAtPoint(fx, fy);
+        tr.foot = { x: fx, y: fy };
+        if (tr.zone === undefined || z !== tr.zone) {
+          tr.zone = z; tr.zoneSince = t;
+          tr.anchor = { x: fx, y: fy }; tr.anchorT = t;
+        }
+        // "Parado" = permanece dentro de um raio ~ largura do corpo em torno de uma âncora
+        const radius = Math.max(tr.w * vw * 0.9, 12);
+        if (Math.hypot((fx - tr.anchor.x) * vw, (fy - tr.anchor.y) * vh) > radius) {
+          tr.anchor = { x: fx, y: fy }; tr.anchorT = t;
+        }
+        tr.stillSec = Math.max(0, t - tr.anchorT);
+        tr.dwellSec = Math.max(0, t - tr.zoneSince);
+        if (z) {
+          const s = stats[z];
+          s.count++;
+          s.maxDwell = Math.max(s.maxDwell, tr.dwellSec);
+          if (tr.stillSec >= CV_CFG.dwellAlertSec) {
+            s.lingering++;
+            s.maxStill = Math.max(s.maxStill, tr.stillSec);
+          }
+        }
+      });
+      return { people, stats };
+    }
+
+    // Atualiza cards laterais (contagem, zonas e alerta da IA)
+    function renderCvMetrics(people, stats) {
+      const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setText('livePeopleNow', people);
+      setText('liveEntries', cv.entries);
+      setText('liveExits', cv.exits);
+
+      CV_ZONES.forEach(z => {
+        const n = stats[z.key].count;
+        const pct = people > 0 ? Math.round((n / people) * 100) : 0;
+        setText(z.textId, `${pct}% (${plural(n, 'pessoa', 'pessoas')})`);
+        const bar = document.getElementById(z.barId);
+        if (bar) bar.style.width = `${pct}%`;
+      });
+
+      const vit = stats.vitrine;
+      const vitPct = people > 0 ? Math.round((vit.count / people) * 100) : 0;
+      const crowded = people >= 2 && (vit.count / people) > CV_CFG.concentrationAlert;
+      let msg;
+      if (vit.lingering > 0) {
+        msg = `Pico de permanência detectado na vitrine: ${plural(vit.lingering, 'pessoa analisando produtos', 'pessoas analisando produtos')} há ${fmtDur(vit.maxStill)}`;
+        if (crowded) msg += ` • ${vitPct}% das pessoas concentradas na zona`;
+        msg += '.';
+      } else if (crowded) {
+        msg = `Alta concentração na vitrine: ${vitPct}% das pessoas (${vit.count} de ${people}) estão na zona.`;
+      } else if (people === 0) {
+        msg = cv.entries === 0 ? 'Aguardando detecção de pessoas no vídeo…' : 'Nenhuma pessoa na cena no momento.';
+      } else {
+        msg = 'Fluxo normal: sem permanência prolongada ou concentração anormal.';
+      }
+      setText('aiAlertText', msg);
+      setText('aiAlertDwell', `Permanência máx.: Vitrine ${fmtDur(stats.vitrine.maxDwell)} · Corredor ${fmtDur(stats.corredor.maxDwell)} · Caixa ${fmtDur(stats.caixa.maxDwell)}`);
+    }
+
+    // =========================================================================
+    // 4.3 LOOP DE DETECÇÃO (quadro a quadro)
+    // =========================================================================
+    function shouldRunDetection() {
+      return camMode === 'video' && camPlaying && !!cv.model;
+    }
+
+    function nextVideoFrame(v) {
+      return new Promise(resolve => {
+        if (typeof v.requestVideoFrameCallback === 'function') v.requestVideoFrameCallback(() => resolve());
+        else requestAnimationFrame(() => resolve());
+      });
+    }
+
+    function startDetectionLoop() {
+      if (cv.loopActive) return;
+      cv.loopActive = true;
+      const token = ++cv.token;
+      const videoEl = document.getElementById('cameraVideoPlayer');
+      (async () => {
+        while (cv.token === token && shouldRunDetection()) {
+          await nextVideoFrame(videoEl);
+          if (cv.token !== token || !shouldRunDetection()) break;
+          await runDetectionStep();
+        }
+        if (cv.token === token) cv.loopActive = false;
+      })();
+    }
+
+    function stopDetectionLoop() {
+      cv.token++;
+      cv.loopActive = false;
+    }
+
+    function syncDetectionLoop() {
+      if (shouldRunDetection()) startDetectionLoop();
+      else stopDetectionLoop();
+    }
+
+    async function runDetectionStep() {
+      const v = document.getElementById('cameraVideoPlayer');
+      if (cv.busy || !cv.model || !v || v.readyState < 2 || !v.videoWidth) return;
+      cv.busy = true;
+      try {
+        const t = v.currentTime;
+        // Vídeo reiniciou (loop) ou voltou no tempo → zera contadores e permanências
+        if (t < cv.lastT - 0.75) resetCvSession();
+        const sessionNow = cv.session;
+
+        const vw = v.videoWidth, vh = v.videoHeight;
+        const preds = await cv.model.detect(v, CV_CFG.maxDetections, CV_CFG.minScore);
+        // Descarta se mudou de vídeo / modo / pausou o loop enquanto a inferência rodava
+        if (camMode !== 'video' || cv.session !== sessionNow) return;
+
+        // Somente pessoas reais (COCO class === 'person') acima da confiança mínima
+        let dets = preds
+          .filter(p => p.class === 'person' && p.score >= CV_CFG.minScore)
+          .map(p => {
+            const x = clamp(p.bbox[0] / vw, 0, 1), y = clamp(p.bbox[1] / vh, 0, 1);
+            const w = clamp(p.bbox[2] / vw, 0, 1 - x), h = clamp(p.bbox[3] / vh, 0, 1 - y);
+            return { x, y, w, h, cx: x + w / 2, cy: y + h / 2, score: p.score };
+          })
+          .filter(d => d.h >= CV_CFG.minBoxH && d.w > 0.012);
+
+        // Remove duplicatas muito sobrepostas (mantém a de maior confiança)
+        dets.sort((a, b) => b.score - a.score);
+        dets = dets.filter((d, i) => !dets.slice(0, i).some(k => boxIoU(k, d) > 0.65));
+
+        updateTracker(dets, t, vw, vh);
+        const { people, stats } = updateDwell(t, vw, vh);
+        cv.lastT = t;
+        renderCvMetrics(people, stats);
+      } catch (err) {
+        console.error('[NEXO] Erro na detecção:', err);
+      } finally {
+        cv.busy = false;
+      }
+    }
+
+    // =========================================================================
+    // 4.4 UPLOAD, DEMO E CONTROLES DE REPRODUÇÃO
+    // =========================================================================
+    function handleVideoFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      loadLocalVideoFile(file);
+      event.target.value = ''; // permite reenviar o mesmo arquivo (reinicia a análise)
+    }
+
+    function loadLocalVideoFile(file) {
+      const looksLikeVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(file.name);
+      if (!looksLikeVideo) {
+        showToast('Por favor, selecione um arquivo de vídeo válido (.mp4, .webm, .mov).', 'warning');
+        return;
+      }
+
+      if (currentVideoUrl) {
+        URL.revokeObjectURL(currentVideoUrl);
+      }
+
+      stopDetectionLoop();
+      cv.pendingAutoplay = false;
+      camMode = 'video';
+      resetCvSession(); // zera entradas, saídas, IDs e tempos de permanência
+
+      currentVideoUrl = URL.createObjectURL(file);
+      const videoEl = document.getElementById('cameraVideoPlayer');
+      const simCanvas = document.getElementById('simSceneCanvas');
+
+      videoEl.src = currentVideoUrl;
+      videoEl.classList.remove('hidden');
+      simCanvas.classList.add('hidden');
+      resizeCameraCanvases();
+
+      document.getElementById('videoSourceLabel').innerHTML = `
+        Arquivo carregado: <strong class="text-[#10B981]">${escapeHtml(file.name)}</strong> • Detecção de pessoas (COCO-SSD) em tempo real
+      `;
+
+      ensureCvModel();
+      if (cv.model || cv.status === 'error') {
+        camPlaying = true;
+        updatePlayPauseUI();
+        videoEl.play().catch(() => {
+          // Autoplay bloqueado: aguarda clique em "Reproduzir"
+          camPlaying = false;
+          updatePlayPauseUI();
+          syncDetectionLoop();
+        });
+      } else {
+        // Modelo ainda carregando: segura o vídeo e inicia automaticamente quando a IA estiver pronta,
+        // para que a análise comece no primeiro quadro.
+        cv.pendingAutoplay = true;
+        videoEl.pause();
+        camPlaying = false;
+        updatePlayPauseUI();
+      }
+      updateCamBadge();
+      syncDetectionLoop();
+      showToast(`Vídeo "${file.name}" carregado! Contadores zerados.`, 'success');
+    }
+
+    // Ativa Simulação Demo sem arquivo
+    function activateDemoSimulation() {
+      const videoEl = document.getElementById('cameraVideoPlayer');
+      const simCanvas = document.getElementById('simSceneCanvas');
+
+      stopDetectionLoop();
+      cv.pendingAutoplay = false;
+      videoEl.pause();
+      videoEl.classList.add('hidden');
+      simCanvas.classList.remove('hidden');
+
+      camMode = 'demo';
+      camPlaying = true;
+      cv.session++;      // invalida qualquer inferência em voo
+      cv.tracks = [];
+      updatePlayPauseUI();
+      resizeCameraCanvases();
+      renderDemoMetrics(true);
+
+      document.getElementById('videoSourceLabel').innerHTML = `
+        Arraste e solte um arquivo de vídeo aqui ou clique para selecionar • <span class="text-[#2563EB] font-semibold">Fonte Ativa: Simulação Demo da Loja A (Canvas)</span>
+      `;
+      updateCamBadge();
+      showToast('Simulação Demo em Canvas ativada.', 'info');
+    }
+
+    // Play / Pause: pausa o <video> E o loop de detecção; o último quadro analisado permanece na tela
+    function toggleCameraPlayPause() {
+      const videoEl = document.getElementById('cameraVideoPlayer');
+      camPlaying = !camPlaying;
+      cv.pendingAutoplay = false;
+
+      if (camMode === 'video') {
+        if (camPlaying) videoEl.play().catch(() => { camPlaying = false; updatePlayPauseUI(); syncDetectionLoop(); });
+        else videoEl.pause();
+        syncDetectionLoop();
+      }
+      updatePlayPauseUI();
+    }
+
+    function updatePlayPauseUI() {
+      const iconPause = document.getElementById('iconPause');
+      const iconPlay = document.getElementById('iconPlay');
+      const text = document.getElementById('btnPlayPauseText');
+      const badge = document.getElementById('liveStatusBadge');
+
+      if (camPlaying) {
+        iconPause.classList.remove('hidden');
+        iconPlay.classList.add('hidden');
+        text.textContent = 'Pausar';
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-bold tracking-wide';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span> AO VIVO / MODO TESTE`;
+      } else {
+        iconPause.classList.add('hidden');
+        iconPlay.classList.remove('hidden');
+        text.textContent = 'Reproduzir';
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-300 text-slate-600 text-xs font-bold tracking-wide';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span> PAUSADO`;
+      }
+    }
+
+    // Eventos do <video> e do controle de confiança (executado uma vez na inicialização)
+    function setupCvUI() {
+      const videoEl = document.getElementById('cameraVideoPlayer');
+      if (videoEl) {
+        videoEl.addEventListener('loadedmetadata', resizeCameraCanvases);
+        videoEl.addEventListener('playing', syncDetectionLoop);
+        videoEl.addEventListener('error', () => {
+          if (camMode !== 'video' || !videoEl.getAttribute('src')) return;
+          stopDetectionLoop();
+          camPlaying = false;
+          updatePlayPauseUI();
+          showToast('Não foi possível decodificar este vídeo (codec não suportado pelo navegador). Tente um .mp4 (H.264) ou .webm.', 'warning');
+        });
+      }
+
+      const slider = document.getElementById('cvMinScore');
+      const out = document.getElementById('cvMinScoreVal');
+      if (slider) {
+        slider.value = CV_CFG.minScore;
+        slider.addEventListener('input', () => {
+          CV_CFG.minScore = parseFloat(slider.value);
+          if (out) out.textContent = `${Math.round(CV_CFG.minScore * 100)}%`;
+        });
+        if (out) out.textContent = `${Math.round(CV_CFG.minScore * 100)}%`;
+      }
+
+      // Mantém o canvas perfeitamente alinhado ao vídeo se o layout mudar
+      const viewport = document.getElementById('cvOverlayCanvas')?.parentElement;
+      if (viewport && 'ResizeObserver' in window) {
+        new ResizeObserver(() => resizeCameraCanvases()).observe(viewport);
+      }
+    }
+
+    // Restaura os números ilustrativos da Simulação Demo
+    function renderDemoMetrics(reset) {
+      if (reset) metricsState = { ...DEMO_INITIAL_METRICS };
+      document.getElementById('livePeopleNow').textContent = metricsState.peopleNow;
+      document.getElementById('liveEntries').textContent = metricsState.entries;
+      document.getElementById('liveExits').textContent = metricsState.exits;
+      if (reset) {
+        CV_ZONES.forEach(z => {
+          const d = DEMO_INITIAL_ZONES[z.key];
+          document.getElementById(z.textId).textContent = `${d.pct}% (${d.n} pessoas)`;
+          document.getElementById(z.barId).style.width = `${d.pct}%`;
+        });
+        document.getElementById('aiAlertText').textContent = DEMO_ALERT_TEXT;
+        document.getElementById('aiAlertDwell').textContent = '';
+      }
+    }
+
+    // Desenha o cenário arquitetônico simulado da loja no Canvas de Fundo
+    function drawDemoStoreScene(ctx, w, h) {
+      // Fundo parede e piso perspectiva
+      const wallGrad = ctx.createLinearGradient(0, 0, 0, h * 0.42);
+      wallGrad.addColorStop(0, '#1E293B');
+      wallGrad.addColorStop(1, '#334155');
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(0, 0, w, h * 0.42);
+
+      const floorGrad = ctx.createLinearGradient(0, h * 0.42, 0, h);
+      floorGrad.addColorStop(0, '#475569');
+      floorGrad.addColorStop(1, '#1E293B');
+      ctx.fillStyle = floorGrad;
+      ctx.fillRect(0, h * 0.42, w, h * 0.58);
+
+      // Linhas de perspectiva do piso
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i <= 5; i++) {
+        const y = h * 0.42 + (h * 0.58) * (i / 5);
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+      for (let i = -3; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(w * 0.5 + i * (w * 0.08), h * 0.42);
+        ctx.lineTo(w * 0.5 + i * (w * 0.24), h);
+        ctx.stroke();
+      }
+
+      // Vitrine iluminada à esquerda
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.16)';
+      ctx.strokeStyle = 'rgba(147, 197, 253, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.fillRect(w * 0.05, h * 0.14, w * 0.24, h * 0.28);
+      ctx.strokeRect(w * 0.05, h * 0.14, w * 0.24, h * 0.28);
+
+      // Balcão Caixa ao fundo direito
+      ctx.fillStyle = '#0F172A';
+      ctx.fillRect(w * 0.72, h * 0.26, w * 0.22, h * 0.16);
+      ctx.strokeStyle = '#64748B';
+      ctx.strokeRect(w * 0.72, h * 0.26, w * 0.22, h * 0.16);
+
+      // Araras centrais
+      ctx.fillStyle = '#1E293B';
+      ctx.fillRect(w * 0.40, h * 0.28, w * 0.18, h * 0.12);
+
+      // Silhuetas estilizadas das pessoas caminhando
+      simActors.forEach(actor => {
+        const px = actor.x * w;
+        const py = actor.y * h;
+        const pw = actor.w * w;
+        const ph = actor.h * h;
+
+        // Sombra no piso
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(px + pw / 2, py + ph, pw * 0.38, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Corpo estilizado (silhueta anônima)
+        ctx.fillStyle = '#94A3B8';
+        ctx.beginPath();
+        ctx.roundRect(px + pw * 0.26, py + ph * 0.26, pw * 0.48, ph * 0.65, 8);
+        ctx.fill();
+
+        // Cabeça (sem traços faciais)
+        ctx.fillStyle = '#CBD5E1';
+        ctx.beginPath();
+        ctx.arc(px + pw * 0.5, py + ph * 0.15, pw * 0.17, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    // ---- Desenho do overlay: zonas tracejadas e bounding boxes ----
+    function drawZoneLines(ctx, r) {
+      CV_ZONES.forEach(z => {
+        ctx.save();
+        ctx.strokeStyle = z.color;
+        ctx.fillStyle = z.fill;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([7, 5]);
+        ctx.beginPath();
+        z.poly.forEach((p, i) => {
+          const px = r.x + p[0] * r.w, py = r.y + p[1] * r.h;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Etiqueta da zona
+        ctx.setLineDash([]);
+        ctx.font = 'bold 11px Inter, sans-serif';
+        const tw = ctx.measureText(z.label).width + 20;
+        const lx = r.x + z.labelAt[0] * r.w, ly = r.y + z.labelAt[1] * r.h;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(lx, ly, tw, 22);
+        ctx.fillStyle = z.color;
+        ctx.fillText(z.label, lx + 10, ly + 15);
+        ctx.restore();
+      });
+    }
+
+    function drawPersonBox(ctx, b) {
+      const { x, y, w: bw, h: bh, color, label } = b;
+      ctx.save();
+      ctx.setLineDash([]);
+
+      // Caixa principal sutil
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.8;
+      ctx.strokeRect(x, y, bw, bh);
+
+      // Cantoneiras estilo OpenCV Tracker
+      const cLen = Math.min(bw, bh) * 0.22;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y + cLen); ctx.lineTo(x, y); ctx.lineTo(x + cLen, y);
+      ctx.moveTo(x + bw - cLen, y); ctx.lineTo(x + bw, y); ctx.lineTo(x + bw, y + cLen);
+      ctx.moveTo(x, y + bh - cLen); ctx.lineTo(x, y + bh); ctx.lineTo(x + cLen, y + bh);
+      ctx.moveTo(x + bw - cLen, y + bh); ctx.lineTo(x + bw, y + bh); ctx.lineTo(x + bw, y + bh - cLen);
+      ctx.stroke();
+
+      // Máscara visual de anonimização sobre a região superior (sem biometria facial)
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+      ctx.fillRect(x + bw * 0.22, y + bh * 0.04, bw * 0.56, bh * 0.22);
+
+      // Ponto dos pés (usado para decidir a zona)
+      if (b.foot) {
+        ctx.fillStyle = b.foot.color;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(b.foot.x, b.foot.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Etiqueta superior: "Pessoa #01 • 98%"
+      ctx.font = 'bold 11px Inter, sans-serif';
+      const textW = ctx.measureText(label).width + 12;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(x, Math.max(y - 22, 4), textW, 20, 4);
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(label, x + 6, Math.max(y - 8, 17));
+      ctx.restore();
+    }
+
+    // Desenha Overlay de Visão Computacional (Zonas + Bounding Boxes), obedecendo aos switches
+    function drawComputerVisionOverlay(ctx, w, h) {
+      ctx.clearRect(0, 0, w, h);
+
+      const showZones = document.getElementById('toggleZoneLines').checked;
+      const showBoxes = document.getElementById('toggleBoundingBoxes').checked;
+
+      let rect, items;
+      if (camMode === 'demo') {
+        rect = { x: 0, y: 0, w, h };
+        items = simActors.map(a => ({
+          x: a.x * w, y: a.y * h, w: a.w * w, h: a.h * h,
+          color: a.color, label: `Pessoa #${a.id} • ${a.conf}%`
+        }));
+      } else {
+        rect = getVideoRect(w, h);
+        if (!rect) return;
+        items = cv.tracks
+          .filter(tr => tr.matched && tr.confirmed)
+          .map(tr => {
+            const zone = CV_ZONES.find(z => z.key === tr.zone);
+            return {
+              x: rect.x + tr.x * rect.w, y: rect.y + tr.y * rect.h,
+              w: tr.w * rect.w, h: tr.h * rect.h,
+              color: CV_COLORS[(tr.id - 1) % CV_COLORS.length],
+              label: `Pessoa #${pad2(tr.id)} • ${Math.round(tr.score * 100)}%`,
+              foot: {
+                x: rect.x + tr.cx * rect.w,
+                y: rect.y + (tr.y + tr.h) * rect.h,
+                color: zone ? zone.color : '#94A3B8'
+              }
+            };
+          });
+      }
+
+      if (showZones) drawZoneLines(ctx, rect);
+      if (showBoxes) items.forEach(it => drawPersonBox(ctx, it));
+    }
+
+    // Atualiza posições dos atores e métricas ILUSTRATIVAS (somente Simulação Demo)
+    function stepCameraSimulation() {
+      if (!camPlaying) return;
+
+      frameCounter++;
+      simActors.forEach(actor => {
+        actor.x += actor.vx;
+        actor.y += actor.vy;
+
+        // Mantém dentro da área útil da loja
+        if (actor.x < 0.08 || actor.x > 0.84) actor.vx *= -1;
+        if (actor.y < 0.44 || actor.y > 0.72) actor.vy *= -1;
+      });
+
+      // Atualiza contadores em tempo real suavemente a cada ~2.5s
+      if (frameCounter % 150 === 0) {
+        const delta = Math.random() > 0.45 ? 1 : -1;
+        metricsState.peopleNow = Math.max(12, Math.min(24, metricsState.peopleNow + delta));
+        if (delta > 0) metricsState.entries += 1;
+        else metricsState.exits += 1;
+
+        document.getElementById('livePeopleNow').textContent = metricsState.peopleNow;
+        document.getElementById('liveEntries').textContent = metricsState.entries;
+        document.getElementById('liveExits').textContent = metricsState.exits;
+
+        // Atualiza barras das zonas proporcionalmente
+        const vitCount = Math.max(4, Math.round(metricsState.peopleNow * 0.72));
+        const corCount = Math.max(3, Math.round(metricsState.peopleNow * 0.50));
+        const caiCount = Math.max(2, Math.round(metricsState.peopleNow * 0.28));
+
+        const vitPct = Math.min(92, Math.round((vitCount / metricsState.peopleNow) * 100));
+        const corPct = Math.min(85, Math.round((corCount / metricsState.peopleNow) * 100));
+        const caiPct = Math.min(75, Math.round((caiCount / metricsState.peopleNow) * 100));
+
+        document.getElementById('zoneVitrineText').textContent = `${vitPct}% (${vitCount} pessoas)`;
+        document.getElementById('zoneVitrineBar').style.width = `${vitPct}%`;
+
+        document.getElementById('zoneCorredorText').textContent = `${corPct}% (${corCount} pessoas)`;
+        document.getElementById('zoneCorredorBar').style.width = `${corPct}%`;
+
+        document.getElementById('zoneCaixaText').textContent = `${caiPct}% (${caiCount} pessoas)`;
+        document.getElementById('zoneCaixaBar').style.width = `${caiPct}%`;
+      }
+    }
+
+    function cameraRenderLoop() {
+      const simCanvas = document.getElementById('simSceneCanvas');
+      const ovCanvas = document.getElementById('cvOverlayCanvas');
+
+      if (ovCanvas && ovCanvas.width > 0) {
+        if (camMode === 'demo') {
+          stepCameraSimulation();
+          if (simCanvas) {
+            const sCtx = simCanvas.getContext('2d');
+            drawDemoStoreScene(sCtx, simCanvas.width, simCanvas.height);
+          }
+        }
+        // O overlay é redesenhado a cada frame a partir do ÚLTIMO estado analisado:
+        // com o vídeo pausado, as caixas do último quadro analisado permanecem na tela
+        // e os switches continuam respondendo em tempo real.
+        const oCtx = ovCanvas.getContext('2d');
+        const dpr = cv.dpr || 1;
+        oCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawComputerVisionOverlay(oCtx, ovCanvas.width / dpr, ovCanvas.height / dpr);
+      }
+
+      requestAnimationFrame(cameraRenderLoop);
+    }
+
+    // Configura eventos de Drag and Drop na tela de câmeras
+    function setupDragAndDrop() {
+      const dropZone = document.getElementById('videoDropZone');
+      if (!dropZone) return;
+
+      ['dragenter', 'dragover'].forEach(evtName => {
+        dropZone.addEventListener(evtName, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('dropzone-active');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evtName => {
+        dropZone.addEventListener(evtName, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('dropzone-active');
+        });
+      });
+
+      dropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          loadLocalVideoFile(files[0]);
+        }
+      });
+    }
+
+    // =========================================================================
+    // 5. MAPA DE CALOR (ALTERAÇÃO DE PERÍODO)
+    // =========================================================================
+    const heatmapPresets = {
+      hoje: {
+        subtitle: 'Período: Hoje (Consolidado)',
+        blobs: `
+          <circle cx="350" cy="215" r="115" fill="url(#heatHigh)" />
+          <circle cx="350" cy="315" r="85" fill="url(#heatHigh)" />
+          <circle cx="165" cy="340" r="70" fill="url(#heatMed)" />
+          <circle cx="530" cy="340" r="65" fill="url(#heatMed)" />
+          <circle cx="162" cy="85" r="65" fill="url(#heatMed)" />
+          <circle cx="585" cy="95" r="45" fill="url(#heatLow)" />
+        `,
+        insights: [
+          { color: 'bg-red-500', bg: 'bg-red-50/70 border-red-100', title: 'Corredor central concentra maior permanência.', desc: 'Tempo médio de 2m 40s próximo às ilhas centrais.' },
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Provador com baixa visitação hoje.', desc: 'Apenas 11% dos visitantes acessaram a área de prova.' },
+          { color: 'bg-[#2563EB]', bg: 'bg-blue-50/70 border-blue-100', title: 'Formação de fila no caixa às 18h.', desc: 'Acúmulo superior a 6 pessoas por mais de 8 minutos.' }
+        ]
+      },
+      pico: {
+        subtitle: 'Período: Horário de Pico (18h)',
+        blobs: `
+          <circle cx="350" cy="220" r="135" fill="url(#heatHigh)" />
+          <circle cx="162" cy="88" r="105" fill="url(#heatHigh)" />
+          <circle cx="350" cy="335" r="95" fill="url(#heatHigh)" />
+          <circle cx="235" cy="245" r="85" fill="url(#heatMed)" />
+          <circle cx="585" cy="90" r="75" fill="url(#heatMed)" />
+        `,
+        insights: [
+          { color: 'bg-red-500', bg: 'bg-red-50/70 border-red-100', title: 'Formação de fila no caixa às 18h.', desc: 'Gargalo crítico detectado no PDV; recomenda-se abrir 2º operador.' },
+          { color: 'bg-red-500', bg: 'bg-red-50/70 border-red-100', title: 'Corredor central em capacidade máxima.', desc: 'Alta densidade de circulação entre as ilhas de acessórios.' },
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Aumento moderado nos provadores.', desc: 'Ocupação sobe para 64% no início da noite.' }
+        ]
+      },
+      manha: {
+        subtitle: 'Período: Manhã (10h às 13h)',
+        blobs: `
+          <circle cx="165" cy="345" r="78" fill="url(#heatMed)" />
+          <circle cx="545" cy="345" r="72" fill="url(#heatMed)" />
+          <circle cx="350" cy="285" r="75" fill="url(#heatLow)" />
+          <circle cx="162" cy="85" r="45" fill="url(#heatLow)" />
+        `,
+        insights: [
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Maior atenção concentrada nas vitrines externas.', desc: 'Visitantes matinais observam vitrines antes de entrar.' },
+          { color: 'bg-[#2563EB]', bg: 'bg-blue-50/70 border-blue-100', title: 'Fluxo fluido no corredor central.', desc: 'Sem pontos de retenção ou filas no caixa durante a manhã.' },
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Provador com baixa visitação.', desc: 'Oportunidade para organização de estoque e vitrine.' }
+        ]
+      }
+    };
+
+    function setHeatmapPeriod(periodKey) {
+      const preset = heatmapPresets[periodKey];
+      if (!preset) return;
+
+      document.querySelectorAll('.hm-period-btn').forEach(btn => {
+        if (btn.getAttribute('data-period') === periodKey) {
+          btn.className = 'hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#1E293B] shadow-2xs transition-all cursor-pointer';
+        } else {
+          btn.className = 'hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-[#1E293B] transition-all cursor-pointer';
+        }
+      });
+
+      document.getElementById('heatmapBlobsLayer').innerHTML = preset.blobs;
+      document.getElementById('hmPeriodSubtitle').textContent = preset.subtitle;
+
+      const listEl = document.getElementById('hmInsightsList');
+      listEl.innerHTML = preset.insights.map(item => `
+        <li class="p-3.5 rounded-xl border flex items-start gap-3 ${item.bg}">
+          <span class="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${item.color}"></span>
+          <div>
+            <p class="text-xs font-bold text-[#1E293B]">${item.title}</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">${item.desc}</p>
+          </div>
+        </li>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 6. RECOMENDAÇÕES DE IA (TESTES CONTROLADOS INTERATIVOS)
+    // =========================================================================
+    const iaCardsState = { 1: 'pending', 2: 'pending', 3: 'pending' };
+
+    function updateIaCardStatus(cardId, newStatus) {
+      iaCardsState[cardId] = newStatus;
+
+      const cardEl = document.getElementById(`ia-card-${cardId}`);
+      const statusBadge = document.getElementById(`ia-status-${cardId}`);
+      const actionsBox = document.getElementById(`ia-actions-${cardId}`);
+
+      if (newStatus === 'active') {
+        cardEl.classList.remove('opacity-60');
+        cardEl.classList.add('border-blue-300', 'bg-blue-50/20');
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-[#2563EB] border border-blue-200 inline-flex items-center gap-1.5';
+        statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#2563EB] animate-pulse"></span> Teste em Andamento`;
+
+        actionsBox.innerHTML = `
+          <button onclick="updateIaCardStatus(${cardId}, 'pending')" class="px-3.5 py-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-50 text-[#2563EB] text-xs font-semibold transition-colors cursor-pointer">
+            Encerrar / Resetar
+          </button>
+        `;
+        showToast('Teste controlado iniciado! Monitorando métricas Antes x Depois.', 'success');
+      } else if (newStatus === 'rejected') {
+        cardEl.classList.remove('border-blue-300', 'bg-blue-50/20');
+        cardEl.classList.add('opacity-60');
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700';
+        statusBadge.textContent = 'Rejeitada';
+
+        actionsBox.innerHTML = `
+          <button onclick="updateIaCardStatus(${cardId}, 'pending')" class="px-3.5 py-2 rounded-lg border border-[#E2E8F0] bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition-colors cursor-pointer">
+            Desfazer
+          </button>
+        `;
+        showToast('Recomendação arquivada pelo lojista.', 'info');
+      } else {
+        cardEl.classList.remove('border-blue-300', 'bg-blue-50/20', 'opacity-60');
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
+        statusBadge.textContent = 'Aguardando Decisão';
+
+        actionsBox.innerHTML = `
+          <button onclick="updateIaCardStatus(${cardId}, 'active')" class="px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer shadow-xs">
+            Iniciar Teste Controlado
+          </button>
+          <button onclick="updateIaCardStatus(${cardId}, 'rejected')" class="px-3.5 py-2.5 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 text-slate-600 text-xs sm:text-sm font-medium transition-colors cursor-pointer">
+            Rejeitar
+          </button>
+        `;
+      }
+
+      // Atualiza contador de testes ativos
+      const activeCount = Object.values(iaCardsState).filter(s => s === 'active').length;
+      document.getElementById('activeTestsCounter').textContent = activeCount;
+    }
+
+    // =========================================================================
+    // 7. CIRCUITO DE 3 LOJAS (CHECK-IN QR CODE)
+    // =========================================================================
+    let circuitoCompletions = 42;
+
+    function simulateQrCheckin() {
+      circuitoCompletions += 1;
+      const counterEl = document.getElementById('circuitoCompletionsCount');
+      counterEl.textContent = circuitoCompletions;
+      counterEl.classList.add('text-[#10B981]');
+      setTimeout(() => counterEl.classList.remove('text-[#10B981]'), 700);
+
+      showToast(`Check-in QR Code validado! Total de circuitos concluídos hoje: ${circuitoCompletions}.`, 'success');
+    }
+
+    // =========================================================================
+    // 8. RELATÓRIOS ANTES X DEPOIS (FILTRO DE PERÍODO)
+    // =========================================================================
+    const reportPresets = {
+      '30d': {
+        visitas: '+18%',
+        conversao: '+3,2 p.p.',
+        fluxoAntes: 720, fluxoDepois: 850,
+        permAntes: 420, permDepois: 510,
+        vendasAntes: 190, vendasDepois: 230
+      },
+      '14d': {
+        visitas: '+15%',
+        conversao: '+2,8 p.p.',
+        fluxoAntes: 340, fluxoDepois: 391,
+        permAntes: 195, permDepois: 232,
+        vendasAntes: 88, vendasDepois: 106
+      },
+      '7d': {
+        visitas: '+12%',
+        conversao: '+2,1 p.p.',
+        fluxoAntes: 175, fluxoDepois: 196,
+        permAntes: 98, permDepois: 114,
+        vendasAntes: 44, vendasDepois: 52
+      }
+    };
+
+    function updateReportPeriod() {
+      const val = document.getElementById('reportPeriodSelect').value;
+      const data = reportPresets[val] || reportPresets['30d'];
+
+      document.getElementById('repVisitasImpact').textContent = data.visitas;
+      document.getElementById('repConversaoImpact').textContent = data.conversao;
+
+      document.getElementById('barFluxoAntesVal').textContent = data.fluxoAntes;
+      document.getElementById('barFluxoDepoisVal').textContent = data.fluxoDepois;
+
+      document.getElementById('barPermAntesVal').textContent = data.permAntes;
+      document.getElementById('barPermDepoisVal').textContent = data.permDepois;
+
+      document.getElementById('barVendasAntesVal').textContent = data.vendasAntes;
+      document.getElementById('barVendasDepoisVal').textContent = data.vendasDepois;
+
+      showToast('Relatório atualizado para o período selecionado.', 'info');
+    }
+
+    // =========================================================================
+    // 9. INICIALIZAÇÃO DA APLICAÇÃO
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderPainelLineChart();
+      setupDragAndDrop();
+      setupCvUI();
+      resizeCameraCanvases();
+      requestAnimationFrame(cameraRenderLoop);
+    });
+
+    window.addEventListener('resize', () => {
+      if (currentScreen === 'cameras') {
+        resizeCameraCanvases();
+      }
+    });
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    function toggleMobileSidebar(open) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-[#1E293B] text-white border-emerald-500/50',
+        info: 'bg-[#1E293B] text-white border-blue-500/50',
+        warning: 'bg-[#1E293B] text-white border-amber-500/50'
+      };
+      const dotColor = {
+        success: 'bg-[#10B981]',
+        info: 'bg-[#2563EB]',
+        warning: 'bg-amber-400'
+      };
+
+      toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-xs sm:text-sm font-medium transition-all duration-300 translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full shrink-0 ${dotColor[type] || dotColor.info}"></span>
+        <span class="flex-1">${message}</span>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3400);
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO OPCIONAL DO PDF BRUTO VIA PDF.JS (SINCRONIZADO 1:1)
+    // =========================================================================
+    let pdfLoaded = false;
+    let showingPdf = false;
+
+    async function renderPdfFromSource(source, fileName = '2026_11_CDS_MIX.pdf', silentError = false) {
+      if (!window.pdfjsLib) {
+        if (!silentError) showToast('Biblioteca PDF.js indisponível offline.', 'warning');
+        return;
+      }
+      try {
+        const pdf = await pdfjsLib.getDocument(source).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2.2 });
+        const canvas = document.getElementById('pdfRenderCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        pdfLoaded = true;
+        showingPdf = true;
+        applyMapSourceVisibility();
+
+        document.getElementById('pdfStatusBadge').textContent = 'PDF Original Renderizado';
+        document.getElementById('pdfFileNameLabel').innerHTML = `Arquivo ativo: <strong class="text-[#10B981]">${fileName}</strong> • Camada térmica sobreposta à prancha oficial.`;
+        document.getElementById('btnToggleSource').classList.remove('hidden');
+
+        if (!silentError) showToast(`PDF "${fileName}" carregado sobre o mapa!`, 'success');
+      } catch (err) {
+        if (!silentError) showToast('Não foi possível ler o PDF selecionado.', 'warning');
+      }
+    }
+
+    function handlePdfFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => renderPdfFromSource({ data: new Uint8Array(e.target.result) }, file.name, false);
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+
+    function toggleMapSource() {
+      if (!pdfLoaded) return;
+      showingPdf = !showingPdf;
+      applyMapSourceVisibility();
+    }
+
+    function applyMapSourceVisibility() {
+      const pdfCanvas = document.getElementById('pdfRenderCanvas');
+      const vectorSvg = document.getElementById('capimVectorFloorplan');
+      const btn = document.getElementById('btnToggleSource');
+      if (showingPdf && pdfLoaded) {
+        pdfCanvas.classList.remove('hidden');
+        vectorSvg.classList.add('hidden');
+        btn.textContent = 'Ver Planta CAD Vetorial';
+      } else {
+        pdfCanvas.classList.add('hidden');
+        vectorSvg.classList.remove('hidden');
+        btn.textContent = 'Ver PDF Original';
+      }
+    }
+
+    function setupPdfDragAndDrop() {
+      const dropZone = document.getElementById('mapDropZone');
+      if (!dropZone) return;
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, e => {
+          e.preventDefault();
+          dropZone.classList.add('dropzone-highlight');
+        });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, e => {
+          e.preventDefault();
+          dropZone.classList.remove('dropzone-highlight');
+        });
+      });
+      dropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0 && files[0].type === 'application/pdf') {
+          const reader = new FileReader();
+          reader.onload = ev => renderPdfFromSource({ data: new Uint8Array(ev.target.result) }, files[0].name, false);
+          reader.readAsArrayBuffer(files[0]);
+        }
+      });
+    }
+
+    // =========================================================================
+    // ZOOM & ARRASTE (PAN) SINCRONIZADOS
+    // =========================================================================
+    let zoomScale = 1;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startDragX = 0;
+    let startDragY = 0;
+
+    function updateMapTransform() {
+      const stage = document.getElementById('mapTransformStage');
+      stage.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`;
+      document.getElementById('zoomLevelLabel').textContent = `${Math.round(zoomScale * 100)}%`;
+    }
+
+    function adjustZoom(delta) {
+      zoomScale = Math.min(2.8, Math.max(0.85, +(zoomScale + delta).toFixed(2)));
+      if (zoomScale === 1) {
+        panX = 0;
+        panY = 0;
+      }
+      updateMapTransform();
+    }
+
+    function resetZoomPan() {
+      zoomScale = 1;
+      panX = 0;
+      panY = 0;
+      updateMapTransform();
+    }
+
+    function handleStoreChange() {
+      const sector = document.getElementById('storeSelector').value;
+      const presets = {
+        all: { zoom: 1, x: 0, y: 0 },
+        central: { zoom: 1.75, x: 15, y: 55 },
+        sul: { zoom: 1.85, x: -35, y: -150 },
+        oeste: { zoom: 1.85, x: 255, y: -85 },
+        leste: { zoom: 1.70, x: -265, y: 40 }
+      };
+      const target = presets[sector] || presets.all;
+      zoomScale = target.zoom;
+      panX = target.x;
+      panY = target.y;
+      updateMapTransform();
+    }
+
+    function setupPanAndWheelZoom() {
+      const viewport = document.getElementById('mapDropZone');
+      if (!viewport) return;
+
+      viewport.addEventListener('wheel', e => {
+        e.preventDefault();
+        adjustZoom(e.deltaY < 0 ? 0.15 : -0.15);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', e => {
+        if (e.target.closest('.hotspot-pin')) return;
+        isDragging = true;
+        startDragX = e.clientX - panX;
+        startDragY = e.clientY - panY;
+        viewport.setPointerCapture(e.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', e => {
+        if (!isDragging) return;
+        panX = e.clientX - startDragX;
+        panY = e.clientY - startDragY;
+        updateMapTransform();
+      });
+
+      viewport.addEventListener('pointerup', e => {
+        isDragging = false;
+        viewport.releasePointerCapture(e.pointerId);
+      });
+    }
+
+    function toggleOverlayLayers() {
+      const showHeat = document.getElementById('toggleHeatLayer').checked;
+      const showPins = document.getElementById('togglePinsLayer').checked;
+      document.getElementById('heatmapBlobsLayer').style.display = showHeat ? 'inline' : 'none';
+      document.getElementById('heatmapPinsLayer').style.display = showPins ? 'inline' : 'none';
+    }
+
+    function updateHeatOpacity(val) {
+      document.getElementById('heatmapBlobsLayer').style.opacity = val;
+    }
+
+    // =========================================================================
+    // DADOS TÉRMICOS E INSIGHTS CALIBRADOS À PLANTA MIX (1400 x 990)
+    // =========================================================================
+    const capimHeatmapPresets = {
+      hoje: {
+        subtitle: 'Período: Hoje (Consolidado)',
+        wings: { central: 86, sul: 71, ext: 58 },
+        blobs: `
+          <!-- Praça de Alimentação / C&A / RCHLO -->
+          <circle cx="691" cy="395" r="115" fill="url(#heatHigh)" />
+          <circle cx="692" cy="485" r="95" fill="url(#heatHigh)" />
+          <!-- Rotunda Central & Acesso Sul (Outback / Madero / Camicado) -->
+          <circle cx="715" cy="605" r="105" fill="url(#heatHigh)" />
+          <!-- Ala Oeste: Renner / Stilo A / Centauro -->
+          <circle cx="415" cy="555" r="90" fill="url(#heatMed)" />
+          <circle cx="545" cy="585" r="80" fill="url(#heatMed)" />
+          <!-- Ala Leste: Corredor STZ / Cinemark / Marisa / Big Lar -->
+          <circle cx="890" cy="520" r="88" fill="url(#heatMed)" />
+          <circle cx="965" cy="590" r="82" fill="url(#heatMed)" />
+          <circle cx="965" cy="365" r="72" fill="url(#heatLow)" />
+        `,
+        pins: [
+          { x: 691, y: 385, label: 'Praça Alimentação / C&A', level: 'high', stats: 'Fluxo: 510 pessoas/h • Permanência: 15m 10s', note: 'Maior concentração do 1º pavimento, irradiando fluxo pelas diagonais para RCHLO e Leitura.' },
+          { x: 732, y: 632, label: 'Outback / Acesso Sul', level: 'high', stats: 'Fluxo: 365 pessoas/h • Permanência: 11m 40s', note: 'Forte retenção na fachada da Av. NS-05, puxando tráfego para Madero, Camicado e Marisa.' },
+          { x: 392, y: 555, label: 'Renner (Ala Av. JK)', level: 'med', stats: 'Fluxo: 280 pessoas/h • Permanência: 8m 05s', note: 'Principal âncora de entrada oeste para visitantes vindos da Avenida JK.' },
+          { x: 985, y: 592, label: 'Cinemark / STZ', level: 'med', stats: 'Fluxo: 245 pessoas/h • Permanência: 6m 45s', note: 'Corredor leste com picos de concentração próximos às sessões do cinema.' }
+        ],
+        insights: [
+          { color: 'bg-red-500', bg: 'bg-red-50/70 border-red-100', title: 'Eixo Praça de Alimentação ↔ RCHLO lidera circulação.', desc: 'Concentra 39% da permanência total do 1º pavimento.' },
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Fachada Sul (Outback / Madero) com alta retenção.', desc: 'Fluxo cresce +44% após as 18h na entrada da Av. NS-05.' },
+          { color: 'bg-[#2563EB]', bg: 'bg-blue-50/70 border-blue-100', title: 'Corredor Leste (Cinemark → STZ) com passagem rápida.', desc: 'Oportunidade de vitrines promocionais para aumentar paradas.' }
+        ]
+      },
+      pico: {
+        subtitle: 'Período: Horário de Pico (18h às 21h)',
+        wings: { central: 95, sul: 89, ext: 74 },
+        blobs: `
+          <circle cx="691" cy="395" r="135" fill="url(#heatHigh)" />
+          <circle cx="725" cy="615" r="125" fill="url(#heatHigh)" />
+          <circle cx="975" cy="585" r="115" fill="url(#heatHigh)" />
+          <circle cx="405" cy="555" r="105" fill="url(#heatHigh)" />
+          <circle cx="692" cy="485" r="100" fill="url(#heatMed)" />
+          <circle cx="920" cy="485" r="85" fill="url(#heatMed)" />
+        `,
+        pins: [
+          { x: 691, y: 385, label: 'Praça Alimentação', level: 'high', stats: 'Fluxo: 720 pessoas/h • Ocupação: 95%', note: 'Capacidade máxima atingida entre 19h e 20h30 no núcleo central.' },
+          { x: 732, y: 632, label: 'Outback / Madero', level: 'high', stats: 'Fluxo: 530 pessoas/h • Fila externa detectada', note: 'Espera no corredor Sul eleva fluxo em frente à Camicado, Vivara e Marisa.' },
+          { x: 985, y: 592, label: 'Cinemark', level: 'high', stats: 'Fluxo: 465 pessoas/h • Pico pré-sessão', note: 'Concentração intensa na entrada do cinema e corredor da STZ.' },
+          { x: 392, y: 555, label: 'Renner / Centauro', level: 'med', stats: 'Fluxo: 375 pessoas/h • Permanência: 9m 10s', note: 'Alto volume de compras pós-expediente na Ala Oeste.' }
+        ],
+        insights: [
+          { color: 'bg-red-500', bg: 'bg-red-50/70 border-red-100', title: 'Pico simultâneo na Praça de Alimentação e Cinemark.', desc: 'Densidade máxima registrada entre 18h30 e 20h30.' },
+          { color: 'bg-red-500', bg: 'bg-red-50/70 border-red-100', title: 'Fila de espera no Outback movimenta corredor Sul.', desc: 'Clientes aguardando mesa elevam fluxo em frente à Camicado.' },
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Reforço recomendado nos caixas (RCHLO / Renner).', desc: 'Aumento de 31% nas entradas entre 18h e 19h30.' }
+        ]
+      },
+      manha: {
+        subtitle: 'Período: Manhã (10h às 13h)',
+        wings: { central: 54, sul: 36, ext: 63 },
+        blobs: `
+          <circle cx="965" cy="345" r="105" fill="url(#heatMed)" />
+          <circle cx="965" cy="255" r="85" fill="url(#heatMed)" />
+          <circle cx="691" cy="395" r="90" fill="url(#heatMed)" />
+          <circle cx="405" cy="555" r="70" fill="url(#heatLow)" />
+          <circle cx="725" cy="615" r="55" fill="url(#heatLow)" />
+        `,
+        pins: [
+          { x: 985, y: 348, label: 'Big / Big Lar / Pernambucanas', level: 'med', stats: 'Fluxo: 255 pessoas/h • Permanência: 9m 30s', note: 'Ala Leste lidera o movimento matinal com compras de conveniência e utilidades.' },
+          { x: 691, y: 385, label: 'Praça Alimentação', level: 'med', stats: 'Fluxo: 225 pessoas/h • Pico após 11h45', note: 'Início do fluxo de almoço executivo.' },
+          { x: 392, y: 555, label: 'Renner / Centauro', level: 'low', stats: 'Fluxo: 135 pessoas/h • Fluxo livre', note: 'Circulação tranquila ideal para reposição e ajuste de vitrines.' }
+        ],
+        insights: [
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Ala Leste (Big Lar / Pernambucanas) puxa fluxo matinal.', desc: 'Visitantes concentram-se nos serviços e varejo essencial.' },
+          { color: 'bg-[#2563EB]', bg: 'bg-blue-50/70 border-blue-100', title: 'Aquecimento gradual na Praça de Alimentação às 11h45.', desc: 'Transição do perfil de compras rápidas para almoço.' },
+          { color: 'bg-amber-500', bg: 'bg-amber-50/70 border-amber-100', title: 'Baixa ocupação na Ala Cinemark e Outback.', desc: 'Janela ideal para campanhas de incentivo matinal.' }
+        ]
+      }
+    };
+
+    function setHeatmapPeriod(periodKey) {
+      const preset = capimHeatmapPresets[periodKey];
+      if (!preset) return;
+
+      document.querySelectorAll('.hm-period-btn').forEach(btn => {
+        if (btn.getAttribute('data-period') === periodKey) {
+          btn.className = 'hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#1E293B] shadow-2xs transition-all cursor-pointer';
+        } else {
+          btn.className = 'hm-period-btn px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-[#1E293B] transition-all cursor-pointer';
+        }
+      });
+
+      document.getElementById('heatmapBlobsLayer').innerHTML = preset.blobs;
+      document.getElementById('hmPeriodSubtitle').textContent = preset.subtitle;
+
+      document.getElementById('wingCentralPct').textContent = `${preset.wings.central}%`;
+      document.getElementById('wingCentralBar').style.width = `${preset.wings.central}%`;
+      document.getElementById('wingSulPct').textContent = `${preset.wings.sul}%`;
+      document.getElementById('wingSulBar').style.width = `${preset.wings.sul}%`;
+      document.getElementById('wingExtPct').textContent = `${preset.wings.ext}%`;
+      document.getElementById('wingExtBar').style.width = `${preset.wings.ext}%`;
+
+      const pinsLayer = document.getElementById('heatmapPinsLayer');
+      pinsLayer.innerHTML = preset.pins.map((pin, idx) => {
+        const fill = pin.level === 'high' ? '#EF4444' : pin.level === 'med' ? '#F97316' : '#2563EB';
+        const badgeW = Math.max(115, pin.label.length * 6.4);
+        return `
+          <g class="hotspot-pin cursor-pointer" onclick="openPinDetail('${periodKey}', ${idx})">
+            <circle cx="${pin.x}" cy="${pin.y}" r="18" fill="${fill}" fill-opacity="0.24" />
+            <circle cx="${pin.x}" cy="${pin.y}" r="8" fill="${fill}" stroke="#FFFFFF" stroke-width="2.5" />
+            <rect x="${pin.x - badgeW / 2}" y="${pin.y - 31}" width="${badgeW}" height="19" rx="9.5" fill="#1E293B" fill-opacity="0.92" />
+            <text x="${pin.x}" y="${pin.y - 18}" text-anchor="middle" font-size="9.5" font-weight="700" fill="#FFFFFF">${pin.label}</text>
+          </g>
+        `;
+      }).join('');
+
+      const listEl = document.getElementById('hmInsightsList');
+      listEl.innerHTML = preset.insights.map(item => `
+        <li class="p-3.5 rounded-xl border flex items-start gap-3 ${item.bg}">
+          <span class="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${item.color}"></span>
+          <div>
+            <p class="text-xs font-bold text-[#1E293B]">${item.title}</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">${item.desc}</p>
+          </div>
+        </li>
+      `).join('');
+
+      closePinDetail();
+    }
+
+    function openPinDetail(periodKey, idx) {
+      const pin = capimHeatmapPresets[periodKey]?.pins[idx];
+      if (!pin) return;
+      document.getElementById('pinTitle').textContent = pin.label;
+      document.getElementById('pinStats').textContent = pin.stats;
+      document.getElementById('pinNote').textContent = pin.note;
+      document.getElementById('pinDetailCard').classList.remove('hidden');
+    }
+
+    function closePinDetail() {
+      document.getElementById('pinDetailCard').classList.add('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setHeatmapPeriod('hoje');
+      setupPdfDragAndDrop();
+      setupPanAndWheelZoom();
+      renderPdfFromSource('2026_11_CDS_MIX.pdf', '2026_11_CDS_MIX.pdf', true);
+    });
+  </script>
+</body>
+</html>
