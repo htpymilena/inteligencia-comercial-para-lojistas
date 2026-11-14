@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, CircuitItem, CircuitStats, ApiClientError } from '@/lib/api';
+import { api, CircuitItem, CircuitStats, StoreItem, ApiClientError } from '@/lib/api';
 import { useAuth } from '@/features/auth/AuthContext';
 import {
   Card,
@@ -51,6 +51,12 @@ export function CircuitDetailPage() {
     queryKey: ['circuit-stats', circuitId],
     queryFn: () => api.obterCircuitoStats(circuitId!),
     enabled: Boolean(circuitId),
+    retry: false,
+  });
+
+  const { data: storesData } = useQuery<StoreItem[], ApiClientError>({
+    queryKey: ['stores'],
+    queryFn: () => api.listarLojas(),
     retry: false,
   });
 
@@ -132,10 +138,20 @@ export function CircuitDetailPage() {
 
   const storesList = circuit.stores && circuit.stores.length > 0
     ? circuit.stores
+    : circuit.store_ids && circuit.store_ids.length > 0
+    ? circuit.store_ids.map((sid, idx) => {
+        const found = storesData?.find((s) => s.id === sid);
+        return {
+          store_id: sid,
+          store_name: found ? found.name : `Loja Parceira ${idx + 1}`,
+          segment: found ? found.segment : undefined,
+          order: idx + 1,
+        };
+      })
     : [
-        { store_id: 's1', store_name: 'Loja 1', segment: 'Moda', order: 1 },
-        { store_id: 's2', store_name: 'Loja 2', segment: 'Acessórios', order: 2 },
-        { store_id: 's3', store_name: 'Loja 3', segment: 'Cafeteria', order: 3 },
+        { store_id: 's1', store_name: 'Loja Moda', segment: 'Vestuário', order: 1 },
+        { store_id: 's2', store_name: 'Loja Calçados', segment: 'Calçados', order: 2 },
+        { store_id: 's3', store_name: 'Loja Acessórios', segment: 'Acessórios', order: 3 },
       ];
 
   const completedCount = stats?.completed_count ?? circuit.completed_count ?? 42;

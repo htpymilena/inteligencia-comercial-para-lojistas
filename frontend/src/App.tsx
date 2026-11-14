@@ -6,6 +6,7 @@ import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ForbiddenPage } from '@/features/auth/ForbiddenPage';
 import { StoreSelectionPage } from '@/features/stores/StoreSelectionPage';
+import { StoreRouteWrapper } from '@/features/stores/StoreRouteWrapper';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { MonitoringPage } from '@/features/monitoring/MonitoringPage';
 import { HeatmapPage } from '@/features/heatmap/HeatmapPage';
@@ -73,14 +74,17 @@ export function App() {
               {/* Store Selection */}
               <Route path="lojas" element={<StoreSelectionPage />} />
 
-              {/* Store Feature Routes */}
-              <Route path="lojas/:storeId/painel" element={<DashboardPage />} />
-              <Route path="lojas/:storeId/monitoramento" element={<MonitoringPage />} />
-              <Route path="lojas/:storeId/mapa" element={<HeatmapPage />} />
-              <Route path="lojas/:storeId/recomendacoes" element={<RecommendationsPage />} />
-              <Route path="lojas/:storeId/experimentos" element={<ExperimentsListPage />} />
-              <Route path="lojas/:storeId/experimentos/:experimentId" element={<ExperimentDetailPage />} />
-              <Route path="lojas/:storeId/relatorios" element={<ReportsPage />} />
+              {/* Store Feature Routes with Guard & Sync */}
+              <Route path="lojas/:storeId" element={<StoreRouteWrapper />}>
+                <Route path="painel" element={<DashboardPage />} />
+                <Route path="monitoramento" element={<MonitoringPage />} />
+                <Route path="mapa" element={<HeatmapPage />} />
+                <Route path="recomendacoes" element={<RecommendationsPage />} />
+                <Route path="experimentos" element={<ExperimentsListPage />} />
+                <Route path="experimentos/:experimentId" element={<ExperimentDetailPage />} />
+                <Route path="relatorios" element={<ReportsPage />} />
+                <Route index element={<Navigate to="painel" replace />} />
+              </Route>
 
               {/* Circuits Routes */}
               <Route path="circuitos" element={<CircuitsListPage />} />

@@ -30,7 +30,7 @@ def normalize(value):
     return value
 
 
-IMPLEMENTED = {"M00", "M01", "M02", "M03", "M04", "M05", "M06"}
+IMPLEMENTED = {"M00", "M01", "M02", "M03", "M04", "M05", "M06", "M07"}
 
 
 def expanded(document, value):

@@ -144,6 +144,7 @@ def test_migration_chain_compiles_without_sql(monkeypatch):
         "monitoring_snapshots",
         "recommendations",
         "experiments",
+        "circuits",
     ):
         assert f"CREATE TABLE {table}" in sql
     assert "DROP TABLE" not in sql

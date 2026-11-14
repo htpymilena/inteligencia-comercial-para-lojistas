@@ -58,8 +58,8 @@ describe('LoginPage (TELA001)', () => {
     const emailInput = screen.getByLabelText(/^e-mail/i) as HTMLInputElement;
     const passwordInput = screen.getByLabelText(/^senha/i) as HTMLInputElement;
 
-    expect(emailInput.value).toBe('lojista@nexo2031.demo');
-    expect(passwordInput.value).toBe('demo1234');
+    expect(emailInput.value).toBe('lojista@demo.invalid');
+    expect(passwordInput.value).toBe('lojista123');
   });
 
   it('successfully logs in and navigates to /app/lojas', async () => {

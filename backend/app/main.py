@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api import router
+from app.circuits_api import router as circuits_router
 from app.core.config import load_settings
 from app.core.errors import install_errors
 from app.core.logging import configure_logging, install_http_logging
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     application.include_router(recommendations_router)
     application.include_router(experiments_router)
     application.include_router(reports_router)
+    application.include_router(circuits_router)
 
     @application.get(
         "/health",

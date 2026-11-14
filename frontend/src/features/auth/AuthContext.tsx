@@ -18,15 +18,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Deliberate security decision: token is kept EXCLUSIVELY in memory.
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [selectedStore, setSelectedStore] = useState<StoreItem | null>(null);
+  const [selectedStore, setSelectedStoreState] = useState<StoreItem | null>(() => {
+    try {
+      const stored = sessionStorage.getItem('nexo_selected_store');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const setSelectedStore = useCallback((store: StoreItem | null) => {
+    setSelectedStoreState(store);
+    try {
+      if (store) {
+        sessionStorage.setItem('nexo_selected_store', JSON.stringify(store));
+      } else {
+        sessionStorage.removeItem('nexo_selected_store');
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
 
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     setSelectedStore(null);
     api.setTokenGetter(() => null);
-  }, []);
+  }, [setSelectedStore]);
 
   useEffect(() => {
     api.setTokenGetter(() => token);

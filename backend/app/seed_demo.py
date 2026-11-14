@@ -15,6 +15,9 @@ STORE_IDS = [UUID(f"00000000-0000-4000-8000-{i:012d}") for i in (1, 2, 3)]
 USER_IDS = [UUID(f"00000000-0000-4000-8000-{i:012d}") for i in (101, 102)]
 
 
+DEMO_CIRCUIT_ID = UUID("00000000-0000-4000-8000-000000000071")
+
+
 def demo_passwords() -> tuple[str, str]:
     values = []
     for name in ("DEMO_ADMIN_PASSWORD", "DEMO_LOJISTA_PASSWORD"):
@@ -75,6 +78,29 @@ def seed_identity(session: Session, passwords: tuple[str, str]) -> None:
     session.flush()
 
 
+def seed_circuits(session: Session) -> None:
+    from datetime import date
+    from app.circuit_models import Circuit
+    from app.models import utcnow
+
+    circuit = session.get(Circuit, DEMO_CIRCUIT_ID)
+    if circuit is None:
+        session.add(
+            Circuit(
+                id=DEMO_CIRCUIT_ID,
+                name="Circuito Moda & Acessórios Demo",
+                reward_description="Ganhe 15% de desconto no Café e Acessórios ao visitar todas as 3 lojas",
+                start_date=date(2026, 11, 1),
+                end_date=date(2026, 11, 30),
+                status="ACTIVE",
+                store_ids=[str(s) for s in STORE_IDS],
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            )
+        )
+        session.flush()
+
+
 def main() -> None:
     from app.seed_metrics import base_date, seed_metrics
     from app.seed_monitoring import seed_monitoring
@@ -89,6 +115,7 @@ def main() -> None:
             seed_metrics(session, demo_date)
             seed_monitoring(session, demo_date)
             seed_recommendations(session)
+            seed_circuits(session)
             print(f"DEMO_BASE_DATE={demo_date.isoformat()}")
     except Exception:
         raise RuntimeError("Seed não concluída; confira configuração e colisões") from None
