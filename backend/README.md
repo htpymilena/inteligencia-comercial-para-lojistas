@@ -1,5 +1,15 @@
 # Backend M00 — NEXO 2031
 
+## M04 experimental
+
+GET `/api/v1/stores/{store_id}/recommendations` aceita filtro opcional `status`.
+PATCH `/{recommendation_id}` aceita somente ACCEPTED ou DISMISSED a partir de
+PROPOSED. Repetição terminal e corrida retornam 409; ID externo retorna 404.
+Estado e versão são comparados atomicamente, com version interno e timestamps UTC.
+Seed inclui três sugestões por loja, com hipótese/evidência fictícias e
+RULE_BASED_DEMO, sem LLM ou modelo treinado; reexecução preserva decisões.
+Revision 004; testes PostgreSQL/concorrência preparados e ainda pendentes.
+
 ## M03 experimental
 
 GETs por loja: `/cameras`, `/monitoring/demo`, `/zones` e `/heatmap/demo?date=YYYY-MM-DD`.

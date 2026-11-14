@@ -10,6 +10,7 @@ from app.core.logging import configure_logging, install_http_logging
 from app.db.session import build_engine
 from app.metrics_api import router as metrics_router
 from app.monitor_api import router as monitor_router
+from app.recommendations_api import router as recommendations_router
 from app.schemas import ApiError, HealthResponse
 
 
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
     application.include_router(router)
     application.include_router(metrics_router)
     application.include_router(monitor_router)
+    application.include_router(recommendations_router)
 
     @application.get(
         "/health",
