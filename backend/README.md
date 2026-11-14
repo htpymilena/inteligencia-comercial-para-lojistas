@@ -1,5 +1,14 @@
 # Backend M00 — NEXO 2031
 
+## M03 experimental
+
+GETs por loja: `/cameras`, `/monitoring/demo`, `/zones` e `/heatmap/demo?date=YYYY-MM-DD`.
+JWT e autorização M01 são obrigatórios. Não há captura ou URL de vídeo real.
+Snapshot ausente retorna 404; mapa sem data persistida retorna cells/insights vazios.
+Seed explícita inclui uma câmera/snapshot por loja, zonas e 7 dias de grade 10×8.
+Valores são DEMO e constraints impedem contagens negativas, zonas fora da grade
+ou intensidades fora de 0..1. Revision 003. Ver EVIDENCIAS-M03.md para SQL pendente.
+
 ## M02 experimental
 
 GET `/api/v1/stores/{store_id}/dashboard` e `/metrics/daily` exigem JWT e

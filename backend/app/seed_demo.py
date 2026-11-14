@@ -77,6 +77,7 @@ def seed_identity(session: Session, passwords: tuple[str, str]) -> None:
 
 def main() -> None:
     from app.seed_metrics import base_date, seed_metrics
+    from app.seed_monitoring import seed_monitoring
 
     passwords = demo_passwords()  # Validate before opening a write transaction.
     engine = build_engine(load_settings().database_url.get_secret_value())
@@ -85,6 +86,7 @@ def main() -> None:
             seed_identity(session, passwords)
             demo_date = base_date()
             seed_metrics(session, demo_date)
+            seed_monitoring(session, demo_date)
             print(f"DEMO_BASE_DATE={demo_date.isoformat()}")
     except Exception:
         raise RuntimeError("Seed não concluída; confira configuração e colisões") from None
