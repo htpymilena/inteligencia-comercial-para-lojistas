@@ -1,6 +1,8 @@
 # Tasks
 
-Planejamento apenas; aprovação pendente. G00 não concluído. Implementação bloqueada até aprovação deste plano e cumprimento de M02 funcional; sequência exige G03 INTEGRADO após M03. Cenários abaixo preparados como documentação, não testes implementados/executados.
+Aprovação técnica do planejamento registrada conforme manifestação explícita do usuário nesta revisão. Nenhuma tarefa de implementação foi concluída ou autorizada para execução agora; os gates continuam obrigatórios.
+
+Planejamento técnico aprovado; implementação não liberada. G00 não concluído. Implementação bloqueada até liberação para execução e cumprimento de M02 funcional; sequência exige G03 INTEGRADO após M03. Cenários abaixo preparados como documentação, não testes implementados/executados.
 
 ## 1. Pré-condições
 

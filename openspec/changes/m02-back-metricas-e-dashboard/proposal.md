@@ -9,6 +9,8 @@ Persistir e consultar métricas DEMO diárias por loja, agregar KPIs e comparar 
 - Planejar exclusivamente o BACK M02: Métricas e dashboard.
 - Operações: obterDashboard, listarMetricasDiarias.
 - Persistência: daily_metrics. Testes e documentação próprios acompanham cada entrega.
+- RN010: validar receitas Decimal finitas, não negativas e representáveis exatamente em centavos antes da escrita, rejeitando frações inválidas sem arredondamento silencioso.
+- RN011: interações são eventos e podem superar visitantes; não impor limite entre essas contagens.
 - Dependências: M01; G01 INTEGRADO. Planejamento independente não dispensa integração.
 
 ## Capabilities
@@ -25,4 +27,4 @@ Nenhuma. Inventário principal OpenSpec vazio nesta inspeção; as mudanças ant
 
 Implementação futura restrita a backend/** (exceto Dockerfile e infraestrutura compartilhada), reutilizando FastAPI/Pydantic, SQLAlchemy/Alembic e Python 3.12. Não modificar FRONT, Compose, CI, contrato ou M07.
 
-Esta proposta aguarda aprovação humana. G00 permanece PENDENTE nos registros consultados. Antes de apply, exigir aprovação deste plano e gates anteriores integrados conforme sistema/06 e sistema/10; a liberação de desenvolvimento independente depende de decisão explícita da equipe, não desta proposta. Gate de saída G02 exige integração FRONT/equipe além dos checks BACK.
+Planejamento corrigido aprovado tecnicamente pelo usuário, incluindo RN010, RN011, critérios financeiros e testes previstos. Essa aprovação não autoriza implementação neste momento nem conclui tarefas ou gates. G00 permanece PENDENTE nos registros consultados; antes de apply, conferir gates anteriores integrados conforme sistema/06 e sistema/10. Desenvolvimento independente depende de decisão explícita da equipe. Gate de saída G02 exige integração FRONT/equipe além dos checks BACK.

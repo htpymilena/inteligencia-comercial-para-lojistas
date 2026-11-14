@@ -25,4 +25,4 @@ Nenhuma. Inventário principal OpenSpec vazio nesta inspeção; as mudanças ant
 
 Implementação futura restrita a backend/** (exceto Dockerfile e infraestrutura compartilhada), reutilizando FastAPI/Pydantic, SQLAlchemy/Alembic e Python 3.12. Não modificar FRONT, Compose, CI, contrato ou M07.
 
-Esta proposta aguarda aprovação humana. G00 permanece PENDENTE nos registros consultados. Antes de apply, exigir aprovação deste plano e gates anteriores integrados conforme sistema/06 e sistema/10; a liberação de desenvolvimento independente depende de decisão explícita da equipe, não desta proposta. Gate de saída G08 exige integração FRONT/equipe além dos checks BACK.
+Planejamento técnico aprovado explicitamente pelo usuário nesta revisão. Essa aprovação não autoriza implementação neste momento nem conclui tarefas ou gates. G00 permanece PENDENTE nos registros consultados; antes de apply, conferir gates anteriores integrados conforme sistema/06 e sistema/10. Desenvolvimento independente depende de decisão explícita da equipe. O gate de saída exige integração FRONT/equipe além dos checks BACK.

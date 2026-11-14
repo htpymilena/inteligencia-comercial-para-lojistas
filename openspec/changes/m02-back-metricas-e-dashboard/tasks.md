@@ -1,6 +1,6 @@
 # Tasks
 
-Planejamento apenas; aprovação pendente. G00 não concluído. Implementação bloqueada até aprovação deste plano e cumprimento de M01; G01 INTEGRADO. Cenários abaixo preparados como documentação, não testes implementados/executados.
+Planejamento corrigido aprovado tecnicamente pelo usuário, incluindo RN010, RN011, critérios financeiros e testes previstos. Nenhuma tarefa de implementação foi concluída ou autorizada para execução agora. G00 não concluído. Implementação bloqueada até liberação para execução e cumprimento de M01; G01 INTEGRADO. Cenários abaixo preparados como documentação, não testes implementados/executados.
 
 ## 1. Pré-condições
 
@@ -16,6 +16,9 @@ Planejamento apenas; aprovação pendente. G00 não concluído. Implementação 
 - [ ] 2.5 Implementar e testar baseline equivalente: quando consulta cobre 2026-11-10 a 2026-11-12, comprovar que baseline corresponde a 2026-11-07 a 2026-11-09 e base zero retorna variação null; documentar comportamento e fixture no relatório BACK.
 - [ ] 2.6 Implementar e testar sem registros: quando janela autorizada não tem métricas, comprovar que retorna items vazio e totais zero com conversão null, sem registros fabricados; documentar comportamento e fixture no relatório BACK.
 - [ ] 2.7 Implementar e testar seed repetível: quando seed é executada duas vezes com a mesma data-base, comprovar que preserva 60 dias por loja, IDs e registros externos; documentar comportamento e fixture no relatório BACK.
+
+- [ ] 2.8 Aplicar RN010 antes da escrita: testar receitas negativas (-0.01), frações inválidas (1.234) e valores não finitos rejeitados sem chamar persistência; testar zero e centavos exatos aceitos, normalização exata e limite numeric(14,2); comprovar constraint de receita não negativa e rollback da seed inválida em PostgreSQL, documentando diagnóstico sem criar endpoint de ingestão.
+- [ ] 2.9 Aplicar RN011 sem limitar interações a visitantes; testar 150 interações para 100 visitantes e interações positivas com zero visitantes, preservando totais e conversão null quando aplicável; documentar as contagens como eventos.
 
 ## 3. HTTP e integração BACK
 
