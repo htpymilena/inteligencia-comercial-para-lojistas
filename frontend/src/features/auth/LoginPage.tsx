@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Input } from '@/components/ui';
-import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { ApiClientError } from '@/lib/api';
 
 export function LoginPage() {
@@ -60,11 +60,11 @@ export function LoginPage() {
 
   function fillDemo(role: 'lojista' | 'admin') {
     if (role === 'lojista') {
-      setEmail('lojista@nexo2031.demo');
-      setPassword('demo1234');
+      setEmail('lojista@demo.invalid');
+      setPassword('lojista123');
     } else {
-      setEmail('admin@nexo2031.demo');
-      setPassword('admin1234');
+      setEmail('admin@demo.invalid');
+      setPassword('admin123');
     }
     setEmailError(null);
     setPasswordError(null);

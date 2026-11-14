@@ -15,6 +15,7 @@ import { ExperimentDetailPage } from '@/features/experiments/ExperimentDetailPag
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { CircuitsListPage } from '@/features/circuits/CircuitsListPage';
 import { CircuitDetailPage } from '@/features/circuits/CircuitDetailPage';
+import { HealthPage } from '@/features/health/HealthPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { api } from '@/lib/api';
 
@@ -57,6 +58,7 @@ export function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/status" element={<HealthPage />} />
             <Route path="/403" element={<ForbiddenPage />} />
 
             {/* Protected Routes inside AppLayout Shell */}

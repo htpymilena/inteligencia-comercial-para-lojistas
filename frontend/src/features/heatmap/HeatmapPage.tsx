@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, HeatmapResponse, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Input, Skeleton, Badge } from '@/components/ui';
+import { Card, Button, Input, Skeleton, Badge } from '@/components/ui';
 import { HeatmapGrid } from './HeatmapGrid';
-import { Flame, Calendar, RefreshCw, AlertCircle, Info, MapPin } from 'lucide-react';
+import { Calendar, RefreshCw, AlertCircle, Info } from 'lucide-react';
 
 export function HeatmapPage() {
   const { storeId } = useParams<{ storeId: string }>();

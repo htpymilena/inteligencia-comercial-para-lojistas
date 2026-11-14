@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { Header, Sidebar, AppLayout } from '@/components/layout';
+import { Header, Sidebar } from '@/components/layout';
 
 describe('Layout Shell', () => {
   it('renders Header with store information and DEMONSTRAÇÃO badge', () => {

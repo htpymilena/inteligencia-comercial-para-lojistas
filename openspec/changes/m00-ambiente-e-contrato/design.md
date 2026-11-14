@@ -4,19 +4,24 @@
 
 Ver `proposal.md` para motivação. A inspeção encontrou somente documentação em `sistema/`, README raiz, habilidades e configuração OpenSpec; não existem aplicações, manifests, Compose ou testes para reutilizar. O schema configurado é `spec-driven`, sem contexto ou regras customizadas. Este design é necessário por envolver frontend, backend e infraestrutura.
 
+**Revisão durante apply:** o repositório agora contém aplicação M01–M06. O usuário
+determinou manter `/` no fluxo de autenticação e expor a página técnica pública
+em `/status`. As descrições de ausência de código nesta seção são o contexto
+histórico da proposta, não o estado atual do repositório.
+
 Foram consultados README, arquitetura, mapa de módulos, integração, Docker, testes, instruções de agentes e contrato. Os documentos fazem referência a `docs/`, mas o contrato existente está em `sistema/openapi.yaml`. A baseline define `/health` na raiz, público, e negócios em `/api/v1`. O proxy de referência cobre apenas `/api`, insuficiente para o diagnóstico M00.
 
 ## Goals / Non-Goals
 
 **Goals:** resolver inicialização, fronteiras de configuração, proxy de saúde, testes e critérios de evidência antes de escrever código; manter compatibilidade com o contrato existente.
 
-**Non-Goals:** nesta execução não criar aplicação, infraestrutura executável ou branches; não instalar programas, executar serviços ou publicar alterações. Na implementação M00 não criar login, tabelas de negócio, seeds, monitoramento ou dashboard. O gate permanece PENDENTE até execução real.
+**Non-Goals:** o planejamento original não criava aplicação ou infraestrutura executável. Esta aplicação M00 não cria novas regras de login, tabelas de negócio, seeds, monitoramento ou dashboard e não publica alterações. O gate permanece PENDENTE até CI e revisão compartilhada.
 
 ## Decisions
 
 ### Estado de aprovação e limites de execução
 
-O escopo técnico BACK foi aprovado pelo usuário, sem autorização para implementar nesta revisão. FRONT é entrega de outro integrante; o BACK não cria nem modifica sua estrutura. Compose, ambos os Dockerfiles, CI, `.env.example`, GitIgnore e demais padrões compartilhados ficam pendentes de alinhamento. As decisões abaixo relativas a esses itens são propostas para o módulo completo, não decisões aprovadas para execução pelo BACK. Em particular, `fetch`, timeout de 10 segundos, proxy Vite e layout dependem do responsável pelo FRONT.
+Esta seção registrava a aprovação original apenas do planejamento BACK. O pedido atual autorizou a aplicação local do M00, inclusive ajustes em FRONT, Dockerfiles e CI. A revisão compartilhada e a execução de CI hospedado ainda são pendentes; a autorização de implementar não constitui aprovação do gate. O `fetch`, timeout de 10 segundos, proxy Vite e layout técnico foram aplicados conforme os critérios do módulo.
 
 1. **Raiz operacional do monorepositório:** planejar `backend/`, `frontend/` e Compose na raiz atual, junto do OpenSpec. Preservar `sistema/` como documentação existente e usar seus caminhos reais em verificações e instruções novas. Mover tudo para `sistema/` ou reorganizar para `docs/` ampliaria escopo sem benefício para o G00; uma futura reorganização requer revisão própria. A futura documentação operacional deve apontar explicitamente para `sistema/AGENTS.md` e preservar o README descritivo existente.
 
@@ -28,7 +33,7 @@ O escopo técnico BACK foi aprovado pelo usuário, sem autorização para implem
 
 5. **Configuração e estrutura mínima:** `.env.example` contém placeholders; `.env` ignorado. Configuração validada no startup, logs em stdout com request ID, método, rota, status e duração, sem credenciais. Preparar SQLAlchemy/session e Alembic vazios, sem tabelas, seed ou `create_all`. Variáveis JWT e senhas demo permanecem reservadas no modelo de ambiente de referência; suas funcionalidades pertencem a M01. Não exigir seed inexistente para aprovar M00.
 
-6. **Shell técnico:** React/TypeScript/Vite/Router com layout desktop mínimo e página técnica inicial pública. Sem telas de negócio fictícias. Loading, sucesso, erro e retry; resposta vazia é erro, pois não há coleção de saúde. Navegação e mensagens acessíveis. A tela informa disponibilidade HTTP, sem alegar banco ou módulos funcionais.
+6. **Shell técnico:** React/TypeScript/Vite/Router com layout desktop e página técnica pública em `/status`. A raiz mantém o fluxo de autenticação dos módulos posteriores. Loading, sucesso, erro e retry; resposta vazia é erro, pois não há coleção de saúde. Navegação e mensagens acessíveis. A tela informa disponibilidade HTTP, sem alegar banco ou módulos funcionais.
 
 7. **Entrega futura em áreas separadas:** infraestrutura/CI/padrões em revisão compartilhada própria antes do código dependente; BACK em `backend/**`, FRONT em `frontend/**`, conforme baseline. Back validado e integrado antes da integração final do Front. Nenhuma delegação ou operação Git remota é realizada por este planejamento. Implementação exige novo pedido explícito.
 
@@ -53,7 +58,7 @@ O escopo técnico BACK foi aprovado pelo usuário, sem autorização para implem
 
 1. Após novo pedido explícito, implementar somente o BACK aprovado em `backend/**`, excluindo Dockerfile; documentar execução local e testes sem dependência das entregas compartilhadas.
 2. Validar HTTP/contrato em processo e SQL contra banco de teste acessível; registrar separadamente qualquer dependência indisponível. FRONT e infraestrutura não são pré-requisitos dos testes HTTP.
-3. Em etapa posterior, após alinhamento com o responsável pelo FRONT, a equipe entrega infraestrutura e FRONT e executa as verificações G00; não alterar tais áreas por iniciativa do BACK.
+3. O pedido posterior autorizou ajustes locais em infraestrutura e FRONT; as verificações G00 foram executadas localmente. Revisão compartilhada e CI hospedado continuam pendentes antes de declarar integração.
 4. Registrar comandos, resultados e evidências; somente considerar M00 integrado após revisão e integração previstas pela equipe. M01 depende de G00.
 5. Recuperação local: parar serviços ou remover apenas contêineres preservando volume. Não executar `down -v`, reset de banco ou migração destrutiva automaticamente. Como não há schema de negócio no M00, não há migração de dados de domínio.
 

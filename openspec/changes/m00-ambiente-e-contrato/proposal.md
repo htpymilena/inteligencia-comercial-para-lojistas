@@ -8,9 +8,9 @@ O NEXO 2031 possui documentação e contrato HTTP, mas ainda não possui aplica�
 
 ### Responsabilidades e aprovação
 
-O usuário aprovou o escopo técnico exclusivamente do BACK: FastAPI, configuração, SQLAlchemy, Alembic, conexão PostgreSQL, `GET /health`, erros, logs e testes. A aprovação é do planejamento; a implementação aguarda novo pedido. O trabalho futuro do BACK fica limitado a `backend/**`, seus testes, migrações e documentação local.
+Na proposta original, o usuário havia aprovado apenas o planejamento técnico do BACK: FastAPI, configuração, SQLAlchemy, Alembic, conexão PostgreSQL, `GET /health`, erros, logs e testes. O pedido de aplicação posterior autorizou o trabalho local integrado de M00; revisão e gate de equipe continuam separados da autorização de implementar.
 
-O FRONT será desenvolvido por outro integrante. React, TypeScript, Vite, páginas, componentes, cliente HTTP e estrutura frontend estão fora da responsabilidade do usuário/BACK. As capacidades abaixo preservam a visão completa do M00; não autorizam execução do FRONT pelo BACK. Compose, ambos os Dockerfiles (inclusive o backend), CI, `.env.example`, GitIgnore e demais configurações compartilhadas permanecem pendentes de alinhamento com o responsável pelo FRONT. Nenhuma alteração de contrato está aprovada.
+O FRONT era atribuído a outro integrante e já existe no repositório. O pedido atual incluiu ajustes locais no frontend e nas configurações compartilhadas necessários ao M00. A revisão compartilhada de Compose, Dockerfiles, CI e demais configurações ainda não ocorreu. Nenhuma alteração do contrato HTTP foi feita.
 
 ### Entregas do módulo completo
 
@@ -20,6 +20,10 @@ O FRONT será desenvolvido por outro integrante. React, TypeScript, Vite, págin
 - Definir proxy específico de `/health` além de `/api`, sem criar `/api/v1/health` ou alterar o contrato.
 - Definir checklist G00, divisão futura de responsabilidades e evidências de integração.
 - Registrar a diferença entre os caminhos documentados (`docs/`) e os arquivos existentes (`sistema/`), sem mover arquivos nesta proposta.
+
+Na aplicação já evoluída até M01–M06, a página técnica pública do M00 fica em
+`/status`; a raiz mantém o fluxo de autenticação. Essa revisão preserva a
+verificação de `/health` pelo mesmo domínio e evita substituir as rotas de negócio.
 
 ## Capabilities
 
@@ -35,8 +39,8 @@ Nenhuma; não há especificações principais cadastradas.
 
 ## Impact
 
-A implementação futura afetará `backend/`, `frontend/`, configuração Compose, Dockerfiles, exemplos de ambiente, CI e documentação operacional na raiz do repositório. A referência contratual existente permanece `sistema/openapi.yaml`; mudanças de contrato ou reorganização documental exigem revisão específica. Dependências previstas seguem a baseline local: Python 3.12, PostgreSQL 16, Node 22, FastAPI/Pydantic, SQLAlchemy/Alembic e React/TypeScript/Vite.
+A aplicação M00 envolve `backend/`, `frontend/`, configuração Compose, Dockerfiles, exemplos de ambiente, CI e documentação operacional na raiz do repositório. A referência contratual existente permanece `sistema/openapi.yaml`; mudanças de contrato ou reorganização documental exigem revisão específica. A execução local usou Python 3.12, PostgreSQL 16 e Node 20 na imagem de build, com dependências de aplicação fixadas por lock.
 
-Esta execução cria apenas planejamento OpenSpec. Não implementa backend ou frontend, não instala ferramentas, não altera contratos, não faz push nem considera G00 aprovado. Autenticação, entidades de negócio, seeds e módulos M01–M08 ficam fora do M00.
+A proposta inicial entregou apenas planejamento. Na aplicação posterior foram ajustados frontend, ambiente e evidências M00, sem alterar o contrato nem fazer push. O gate G00 continua pendente de CI e revisão. Autenticação, entidades de negócio, seeds e módulos M01–M08 já existiam no repositório e permanecem fora do escopo funcional desta mudança.
 
 O BACK poderá ser desenvolvido e verificado separadamente do FRONT e do Compose, com execução Python local e testes HTTP em processo. Testes de integração SQL exigem PostgreSQL 16 de teste acessível e credenciais fornecidas por ambiente; sua disponibilidade ainda precisa ser confirmada. O G00 completo continua dependente das entregas externas e compartilhadas.

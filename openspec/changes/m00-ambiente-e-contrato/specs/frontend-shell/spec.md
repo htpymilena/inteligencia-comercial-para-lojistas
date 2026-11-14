@@ -7,13 +7,13 @@ Disponibilizar uma estrutura desktop navegável e uma página técnica que permi
 ## ADDED Requirements
 
 ### Requirement: Shell acessível sem funcionalidades fictícias
-A interface SHALL carregar uma estrutura desktop com identificação do NEXO 2031 e acesso à página técnica de conexão. Navegação disponível SHALL ser utilizável por teclado; módulos não implementados SHALL ser omitidos ou explicitamente indisponíveis.
+A interface SHALL disponibilizar em `/status` uma página técnica pública com identificação do NEXO 2031. Navegação disponível SHALL ser utilizável por teclado; módulos não implementados SHALL ser omitidos ou explicitamente indisponíveis.
 
 #### Scenario: Acesso inicial
-- **WHEN** o usuário abre `http://localhost:5173`
-- **THEN** encontra o shell e a página técnica sem exigência de login
+- **WHEN** o usuário abre `http://localhost:5173/status`
+- **THEN** encontra a página técnica sem exigência de login
 - **AND** consegue acessar as ações disponíveis pelo teclado
-- **AND** não encontra indicadores, câmeras ou funcionalidades de negócio apresentados como implementados
+- **AND** a página de saúde não apresenta indicadores ou câmeras como resultado dessa consulta
 
 ### Requirement: Consulta de saúde pelo mesmo domínio
 A página técnica SHALL consultar o endpoint real `/health` pelo domínio do frontend usando proxy. O cliente SHALL respeitar o caminho raiz de saúde independentemente da base `/api/v1` das operações de negócio.

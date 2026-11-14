@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, ComparativeReportResponse, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Skeleton } from '@/components/ui';
 import { DateRangePicker } from '@/features/dashboard/DateRangePicker';
-import { BarChart3, Download, ArrowUpRight, ArrowDownRight, Minus, AlertCircle, RefreshCw, FileText } from 'lucide-react';
+import { Download, ArrowUpRight, ArrowDownRight, Minus, AlertCircle, RefreshCw, FileText } from 'lucide-react';
 
 export function calculateEqualBaseline(startDate: string, endDate: string): { start: string; end: string } {
   const start = new Date(startDate);
@@ -187,10 +187,6 @@ export function ReportsPage() {
                 (metric.percentage_points_change !== null &&
                   metric.percentage_points_change !== undefined &&
                   metric.percentage_points_change > 0);
-
-              const isZero =
-                (metric.percentage_change === 0 || metric.percentage_points_change === 0) &&
-                metric.percentage_change !== null;
 
               return (
                 <Card key={metric.metric_name} className="border-slate-200">

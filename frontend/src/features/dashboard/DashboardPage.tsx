@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, DashboardResponse, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Skeleton } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardDescription, Button, Skeleton } from '@/components/ui';
 import { DateRangePicker } from './DateRangePicker';
 import { KpiCards } from './KpiCards';
 import { MetricsTrendChart } from './MetricsTrendChart';

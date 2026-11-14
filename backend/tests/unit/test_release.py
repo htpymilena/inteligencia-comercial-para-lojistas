@@ -36,6 +36,12 @@ def test_seed_configuration_before_writes(monkeypatch):
     with pytest.raises(RuntimeError, match="DEMO_ADMIN_PASSWORD"):
         demo_passwords()
 
+    from app import seed_demo
+
+    monkeypatch.setattr(seed_demo, "build_engine", lambda _url: pytest.fail("engine opened"))
+    with pytest.raises(RuntimeError, match="DEMO_ADMIN_PASSWORD"):
+        seed_demo.main()
+
 
 def test_signed_infinite_expiry_is_unauthorized():
     key = "synthetic-key-with-at-least-32-bytes"

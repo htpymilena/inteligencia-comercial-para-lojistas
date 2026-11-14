@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HeatmapPage } from '@/features/heatmap/HeatmapPage';
-import { api, HeatmapResponse, ApiClientError } from '@/lib/api';
+import { api, HeatmapResponse } from '@/lib/api';
 
 describe('HeatmapPage (TELA005 Heatmap Filtering & Empty Fallback)', () => {
   let queryClient: QueryClient;

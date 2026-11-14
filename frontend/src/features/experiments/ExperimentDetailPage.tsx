@@ -2,14 +2,13 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, Experiment, ExperimentResult, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge, Skeleton } from '@/components/ui';
 import {
   FlaskConical,
   Play,
   CheckCircle2,
   XCircle,
   ArrowLeft,
-  Calendar,
   AlertCircle,
   TrendingUp,
   Info,
@@ -26,14 +25,13 @@ export function ExperimentDetailPage() {
     isLoading,
     isError,
     error,
-    refetch,
   } = useQuery<Experiment, ApiClientError>({
     queryKey: ['experiment', storeId, experimentId],
     queryFn: () => api.obterExperimento(storeId!, experimentId!),
     enabled: Boolean(storeId && experimentId),
   });
 
-  const { data: result, isLoading: isLoadingResult } = useQuery<ExperimentResult, ApiClientError>({
+  const { data: result } = useQuery<ExperimentResult, ApiClientError>({
     queryKey: ['experiment-result', storeId, experimentId],
     queryFn: () => api.obterResultadoExperimento(storeId!, experimentId!),
     enabled: Boolean(storeId && experimentId && (experiment?.status === 'RUNNING' || experiment?.status === 'COMPLETED')),

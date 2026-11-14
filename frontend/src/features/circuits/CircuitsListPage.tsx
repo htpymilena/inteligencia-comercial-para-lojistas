@@ -16,7 +16,7 @@ import {
   Modal,
   Skeleton,
 } from '@/components/ui';
-import { GitFork, Plus, Calendar, Gift, Store, AlertCircle, ArrowRight, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { GitFork, Plus, Calendar, Gift, Store, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
 
 export function CircuitsListPage() {
   const { user, selectedStore } = useAuth();

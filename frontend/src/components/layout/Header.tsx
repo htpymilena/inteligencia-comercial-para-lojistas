@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui';
-import { Menu, Activity, Store, HelpCircle } from 'lucide-react';
+import { Menu, Store, HelpCircle } from 'lucide-react';
 
 export interface HeaderProps {
   storeName?: string;

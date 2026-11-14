@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { App } from '@/App';
 import { Modal, Button, Input } from '@/components/ui';
+import userEvent from '@testing-library/user-event';
 
 describe('Quality Hardening, Accessibility & Router (M08)', () => {
   it('renders login page as root entrypoint when unauthenticated', async () => {
@@ -14,6 +15,30 @@ describe('Quality Hardening, Accessibility & Router (M08)', () => {
       expect(screen.getByLabelText(/^senha$/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /^entrar$/i })).toBeInTheDocument();
     });
+  });
+
+  it('opens the public status page without authentication', async () => {
+    const previousPath = window.location.pathname;
+    const originalFetch = globalThis.fetch;
+    window.history.replaceState({}, '', '/status');
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200,
+      json: async () => ({ status: 'ok', service: 'nexo-api' }) });
+    try {
+      render(<App />);
+      expect(screen.getByText('NEXO 2031')).toBeInTheDocument();
+      const loginLink = screen.getByRole('link', { name: 'Entrar' });
+      expect(loginLink).toHaveAttribute('href', '/login');
+      const user = userEvent.setup();
+      await user.tab();
+      expect(loginLink).toHaveFocus();
+      await waitFor(() => expect(screen.getByText('OPERACIONAL')).toBeInTheDocument());
+      await user.tab();
+      expect(screen.getByRole('button', { name: /verificar conexão novamente/i })).toHaveFocus();
+      expect(screen.queryByLabelText(/^senha$/i)).not.toBeInTheDocument();
+    } finally {
+      window.history.replaceState({}, '', previousPath);
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('modal dialog handles Escape key and provides proper dialog ARIA roles', () => {

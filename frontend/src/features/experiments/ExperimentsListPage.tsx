@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, Experiment, Recommendation, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Modal, Input, Skeleton } from '@/components/ui';
-import { FlaskConical, Plus, Calendar, ArrowRight, Play, CheckCircle2, XCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, Button, Badge, Modal, Input, Skeleton } from '@/components/ui';
+import { FlaskConical, Plus, Calendar, ArrowRight, AlertCircle } from 'lucide-react';
 
 export function ExperimentsListPage() {
   const { storeId } = useParams<{ storeId: string }>();
@@ -286,7 +286,7 @@ export function ExperimentsListPage() {
             <select
               id="exp-metric"
               value={targetMetric}
-              onChange={(e) => setTargetMetric(e.target.value as any)}
+              onChange={(e) => setTargetMetric(e.target.value as Experiment['target_metric'])}
               className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="CONVERSION">Taxa de Conversão (%)</option>

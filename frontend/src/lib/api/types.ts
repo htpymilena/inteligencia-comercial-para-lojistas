@@ -24,10 +24,8 @@ export class ApiClientError extends Error {
 }
 
 export interface HealthResponse {
-  status: string;
-  service?: string;
-  timestamp?: string;
-  version?: string;
+  status: 'ok';
+  service: string;
 }
 
 export interface UserProfile {

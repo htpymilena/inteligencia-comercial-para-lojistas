@@ -62,15 +62,18 @@ export class ApiClient {
   private baseUrl: string;
   private getToken: () => string | null;
   private onUnauthorized?: () => void;
+  private timeoutMs: number;
 
   constructor(options?: {
     baseUrl?: string;
     getToken?: () => string | null;
     onUnauthorized?: () => void;
+    timeoutMs?: number;
   }) {
     this.baseUrl = options?.baseUrl || '';
     this.getToken = options?.getToken || (() => null);
     this.onUnauthorized = options?.onUnauthorized;
+    this.timeoutMs = options?.timeoutMs ?? 10_000;
   }
 
   setTokenGetter(getter: () => string | null) {
@@ -94,10 +97,13 @@ export class ApiClient {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       const response = await fetch(url, {
         ...init,
         headers,
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -124,10 +130,21 @@ export class ApiClient {
         return undefined as unknown as T;
       }
 
-      return (await response.json()) as T;
+      try {
+        return (await response.json()) as T;
+      } catch {
+        throw new ApiClientError(response.status, {
+          error: { code: 'INVALID_RESPONSE', message: 'Resposta inválida da API.' },
+        });
+      }
     } catch (err: unknown) {
       if (err instanceof ApiClientError) {
         throw err;
+      }
+      if (controller.signal.aborted) {
+        throw new ApiClientError(0, {
+          error: { code: 'TIMEOUT', message: 'A API demorou demais para responder.' },
+        });
       }
       throw new ApiClientError(0, {
         error: {
@@ -135,12 +152,23 @@ export class ApiClient {
           message: err instanceof Error ? err.message : 'Falha na comunicação de rede com o servidor.',
         },
       });
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
   // --- M00: Health Check ---
   async verificarSaude(): Promise<HealthResponse> {
-    return this.request<HealthResponse>('/health');
+    const value = await this.request<unknown>('/health');
+    if (typeof value !== 'object' || value === null || Array.isArray(value) ||
+        Object.keys(value).sort().join(',') !== 'service,status' ||
+        !('status' in value) || value.status !== 'ok' ||
+        !('service' in value) || typeof value.service !== 'string') {
+      throw new ApiClientError(200, {
+        error: { code: 'INVALID_RESPONSE', message: 'Resposta de saúde fora do contrato.' },
+      });
+    }
+    return value as HealthResponse;
   }
 
   // --- M01: Autenticação e Lojas ---

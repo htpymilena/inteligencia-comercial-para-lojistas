@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api, HealthResponse, ApiClientError } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Badge } from '@/components/ui';
 import { Activity, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
@@ -32,6 +33,10 @@ export function HealthPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
+      <header className="mb-6 flex items-center justify-between">
+        <span className="font-semibold text-lg">NEXO 2031</span>
+        <Link to="/login" className="text-sm text-brand-700 underline">Entrar</Link>
+      </header>
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -59,11 +64,7 @@ export function HealthPage() {
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 <span>Backend respondendo com sucesso</span>
               </div>
-              {health.service && <p className="text-xs text-emerald-700">Serviço: {health.service}</p>}
-              {health.timestamp && <p className="text-xs text-emerald-700">Timestamp: {health.timestamp}</p>}
-              {health.version && (
-                <p className="text-xs text-emerald-700">Versão da API: {health.version}</p>
-              )}
+              <p className="text-xs text-emerald-700">Serviço: {health.service}</p>
             </div>
           ) : error ? (
             <div className="rounded-lg bg-rose-50 border border-rose-200 p-4 space-y-2">

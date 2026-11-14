@@ -3,6 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiClient } from '@/lib/api/client';
 import { HealthPage } from '@/features/health/HealthPage';
+import { MemoryRouter } from 'react-router-dom';
 
 describe('ApiClient & Health Connection', () => {
   const originalFetch = globalThis.fetch;
@@ -19,7 +20,7 @@ describe('ApiClient & Health Connection', () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({ status: 'ok', timestamp: '2026-11-14T00:00:00Z' }),
+      json: async () => ({ status: 'ok', service: 'nexo-api' }),
     });
     globalThis.fetch = mockFetch;
 
@@ -64,10 +65,10 @@ describe('ApiClient & Health Connection', () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({ status: 'ok', timestamp: '2026-11-14T03:00:00Z', version: '1.0.0' }),
+      json: async () => ({ status: 'ok', service: 'nexo-api' }),
     });
 
-    render(<HealthPage />);
+    render(<MemoryRouter><HealthPage /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('OPERACIONAL')).toBeInTheDocument();
@@ -78,11 +79,46 @@ describe('ApiClient & Health Connection', () => {
   it('HealthPage displays error feedback on failed health check', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'));
 
-    render(<HealthPage />);
+    render(<MemoryRouter><HealthPage /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('DESCONECTADO')).toBeInTheDocument();
       expect(screen.getByText(/Falha na comunicação com a API/i)).toBeInTheDocument();
     });
+  });
+
+  it('rejects a health response outside the contract', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200,
+      json: async () => ({ status: 'ok', timestamp: 'extra' }) });
+    await expect(new ApiClient().verificarSaude()).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+  });
+
+  it('rejects an empty successful response', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200,
+      json: async () => { throw new SyntaxError('empty body'); } });
+    await expect(new ApiClient().verificarSaude()).rejects.toMatchObject({ code: 'INVALID_RESPONSE' });
+  });
+
+  it('times out a stalled request', async () => {
+    globalThis.fetch = vi.fn().mockImplementation((_url, init: RequestInit) => new Promise((_resolve, reject) => {
+      init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+    }));
+    await expect(new ApiClient({ timeoutMs: 10 }).verificarSaude()).rejects.toMatchObject({ code: 'TIMEOUT' });
+  });
+
+  it('shows loading, then recovers after a manual retry', async () => {
+    let rejectFirst!: (reason?: unknown) => void;
+    const fetchMock = vi.fn()
+      .mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectFirst = reject; }))
+      .mockResolvedValueOnce({ ok: true, status: 200,
+        json: async () => ({ status: 'ok', service: 'nexo-api' }) });
+    globalThis.fetch = fetchMock;
+    render(<MemoryRouter><HealthPage /></MemoryRouter>);
+    expect(screen.getByRole('button', { name: /verificar conexão novamente/i })).toBeDisabled();
+    rejectFirst(new Error('offline'));
+    await waitFor(() => expect(screen.getByText('DESCONECTADO')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /verificar conexão novamente/i }));
+    await waitFor(() => expect(screen.getByText('OPERACIONAL')).toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

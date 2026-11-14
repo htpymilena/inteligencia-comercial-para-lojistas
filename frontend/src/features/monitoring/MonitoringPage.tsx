@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, CameraSnapshot, ApiClientError } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
-import { Video, RefreshCw, Users, ArrowDownRight, ArrowUpRight, ShieldCheck, AlertCircle, EyeOff } from 'lucide-react';
+import { Video, RefreshCw, ArrowDownRight, ArrowUpRight, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export function MonitoringPage() {
   const { storeId } = useParams<{ storeId: string }>();

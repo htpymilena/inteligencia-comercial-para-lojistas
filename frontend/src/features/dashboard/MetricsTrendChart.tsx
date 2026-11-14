@@ -13,7 +13,7 @@ import {
 import { DailyMetric } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Button } from '@/components/ui';
 import { formatCurrency, formatConversionRate, formatNumber } from './KpiCards';
-import { Table, Eye, EyeOff } from 'lucide-react';
+import { Table } from 'lucide-react';
 
 export interface MetricsTrendChartProps {
   data: DailyMetric[];

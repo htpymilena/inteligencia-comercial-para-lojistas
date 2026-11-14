@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, Recommendation, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
-import { Lightbulb, CheckCircle2, XCircle, ArrowRight, RefreshCw, AlertCircle, Sparkles, Filter } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
+import { Lightbulb, CheckCircle2, XCircle, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 
 export function RecommendationsPage() {
   const { storeId } = useParams<{ storeId: string }>();

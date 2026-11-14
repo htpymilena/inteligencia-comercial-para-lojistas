@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
 import { api, StoreItem, ApiClientError } from '@/lib/api';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardFooter, Button, Badge, Skeleton } from '@/components/ui';
 import { Store, ArrowRight, LogOut, RefreshCw, AlertCircle } from 'lucide-react';
 
 export function StoreSelectionPage() {
