@@ -1,5 +1,14 @@
 # Backend M00 — NEXO 2031
 
+## M08 experimental
+
+Ver REPRODUCAO.md para execução, smoke e protocolo de backup sintético.
+Regressão verifica autorização antes de SQL, papel persistido após emissão de JWT,
+validação de segredos, requests reais em Uvicorn e compilação offline das migrations.
+Migrations, seeds, concorrência, backup/restauração e E2E reais ainda exigem banco
+de teste e a equipe; nenhuma aprovação de gate é inferida. Não houve captura de mídia,
+mudança de contrato, FRONT, Compose ou CI. M07 não está implementado.
+
 ## M06 experimental
 
 GET `/api/v1/stores/{store_id}/reports/summary?period_start=...&period_end=...`

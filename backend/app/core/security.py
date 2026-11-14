@@ -41,5 +41,5 @@ def decode_token(token: str, secret: str) -> UUID:
         if claims["role"] not in ("ADMIN", "LOJISTA"):
             raise ValueError
         return UUID(claims["sub"])
-    except (jwt.InvalidTokenError, ValueError, TypeError, KeyError):
+    except (jwt.InvalidTokenError, ValueError, TypeError, KeyError, OverflowError):
         raise ValueError("Token inválido") from None

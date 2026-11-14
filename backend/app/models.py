@@ -13,7 +13,10 @@ def utcnow() -> datetime:
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = (CheckConstraint("role IN ('ADMIN','LOJISTA')"),)
+    __table_args__ = (
+        CheckConstraint("role IN ('ADMIN','LOJISTA')"),
+        CheckConstraint("email = lower(trim(email))"),
+    )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     email: Mapped[str] = mapped_column(String(254), unique=True)
     password_hash: Mapped[str] = mapped_column(String)
