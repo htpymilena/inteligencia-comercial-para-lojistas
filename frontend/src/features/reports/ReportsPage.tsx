@@ -45,7 +45,7 @@ export function ReportsPage() {
 
   const today = new Date();
   const past30 = new Date();
-  past30.setDate(today.getDate() - 30);
+  past30.setDate(today.getDate() - 29);
 
   const [startDate, setStartDate] = useState(past30.toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(today.toISOString().split('T')[0]);
