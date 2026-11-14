@@ -1,1 +1,12 @@
 /.venv/
+
+# Configuração local e credenciais (em qualquer diretório)
+.env
+.env.*
+!.env.example
+!.env.*.example
+credentials.json
+credentials.*.json
+*.pem
+*.key
+.aws/

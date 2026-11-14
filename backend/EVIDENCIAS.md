@@ -81,6 +81,25 @@ Nesta atualização documental, o agente não reexecutou os testes nem consultou
 o ambiente de conexão. Nenhuma URL ou credencial foi registrada e nenhuma
 operação no banco foi executada pelo agente.
 
+## Revalidação antes do envio — 14/11/2026
+
+- `python -m pytest tests/unit tests/contract tests/integration -q`:
+  **11 passed, 1 skipped**, em 2.72s. Integração pulada por ausência de
+  `TEST_DATABASE_URL` nesta sessão; a evidência manual acima permanece válida.
+- Ruff: aprovado. Mypy: aprovado, 9 arquivos. Alembic heads: saída zero,
+  sem heads. Pip check: nenhuma dependência quebrada.
+- Permanece o aviso de depreciação de `BlockingPortal`, sem falha.
+- GitIgnore ampliado para `.env`, variantes locais, arquivos de credenciais,
+  chaves PEM/KEY e `.aws/`; exemplos `.env.example` continuam permitidos.
+- Nenhum arquivo `.venv`, `.env`, credenciais JSON ou chave PEM/KEY foi
+  encontrado no índice ou no histórico consultado. Valores SQL dos testes
+  são sintéticos; a conexão real depende de variável de ambiente.
+- Tarefas BACK 3.1–3.8 marcadas como concluídas. A introdução de `tasks.md`
+  ainda descreve a implementação como futura e deve ser reconciliada em
+  revisão documental; os checkboxes e as evidências registram o estado atual.
+- Esta revalidação não executou push nem alterou Front-end ou `main`.
+  As afirmações anteriores sobre ausência de commit referem-se ao registro original.
+
 ## Pendências e limites
 
 - **3.7 concluída:** integração SQL validada pela execução manual acima,
