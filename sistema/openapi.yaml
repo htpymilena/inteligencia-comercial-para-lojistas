@@ -1,0 +1,1896 @@
+# CONTRATO DE PLANEJAMENTO — rotas MXX passam a existir apenas após implementação do módulo.
+# A API real deve respeitar este arquivo e não anunciar endpoints ficticiamente como concluídos.
+openapi: 3.1.0
+info:
+  title: NEXO 2031 — API do MVP Web
+  version: 1.0.0
+  description: Contrato HTTP planejado para desenvolvimento incremental. Dados de monitoramento, heatmap, IA
+    e circuitos são DEMO; o documento não implica endpoints já implementados.
+servers:
+- url: http://localhost:8000
+  description: API FastAPI no host (desenvolvimento)
+- url: /
+  description: Mesmo domínio via proxy Vite (frontend usa base /api/v1)
+tags:
+- name: Health
+  description: Serviço
+- name: Auth
+  description: Identidade
+- name: Stores
+  description: Lojas
+- name: Dashboard
+  description: Métricas agregadas
+- name: Monitoring
+  description: Monitoramento fictício
+- name: Heatmap
+  description: Zonas e mapa sintético
+- name: Recommendations
+  description: Recomendações explicáveis
+- name: Experiments
+  description: Ações comerciais
+- name: Reports
+  description: Comparação descritiva
+- name: Circuits
+  description: Campanhas de três lojas
+security:
+- BearerAuth: []
+paths:
+  /health:
+    get:
+      tags:
+      - Health
+      operationId: verificarSaude
+      summary: Estado do serviço
+      x-mvp-module: M00
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                service: nexo-api
+        '500':
+          $ref: '#/components/responses/Error500'
+      security: []
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Auth
+      operationId: login
+      summary: Autenticar usuário de demonstração
+      x-mvp-module: M01
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Credenciais são obtidas do ambiente de demonstração; não persistir token no localStorage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: lojista@demo.invalid
+              password: <senha-configurada-no-env>
+      security: []
+  /api/v1/auth/me:
+    get:
+      tags:
+      - Auth
+      operationId: obterPerfil
+      summary: Dados do usuário autenticado
+      x-mvp-module: M01
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/v1/stores:
+    get:
+      tags:
+      - Stores
+      operationId: listarLojas
+      summary: Listar lojas autorizadas
+      x-mvp-module: M01
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoresResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/v1/stores/{store_id}:
+    get:
+      tags:
+      - Stores
+      operationId: obterLoja
+      summary: Detalhar loja autorizada
+      x-mvp-module: M01
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - &id001
+        name: store_id
+        in: path
+        required: true
+        description: ID da loja, com autorização verificada no servidor
+        schema: &id005
+          type: string
+          format: uuid
+  /api/v1/stores/{store_id}/dashboard:
+    get:
+      tags:
+      - Dashboard
+      operationId: obterDashboard
+      summary: KPIs agregados do período
+      x-mvp-module: M02
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+              example:
+                store_id: 00000000-0000-4000-8000-000000000001
+                period_start: '2026-11-01'
+                period_end: '2026-11-07'
+                data_origin: DEMO
+                visitors: 1248
+                interactions: 312
+                sales_count: 198
+                revenue_brl: '18900.00'
+                conversion_rate: 15.87
+                visitor_change_percent: 8.0
+                sales_change_percent: 10.0
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Percentuais nulos quando não houver denominador; período inclusivo, origem DEMO.
+      parameters:
+      - *id001
+      - &id003
+        name: period_start
+        in: query
+        required: true
+        description: Início inclusivo (YYYY-MM-DD), máximo de 366 dias
+        schema: &id002
+          type: string
+          format: date
+      - &id004
+        name: period_end
+        in: query
+        required: true
+        description: Fim inclusivo (YYYY-MM-DD)
+        schema: *id002
+  /api/v1/stores/{store_id}/metrics/daily:
+    get:
+      tags:
+      - Dashboard
+      operationId: listarMetricasDiarias
+      summary: Série diária agregada
+      x-mvp-module: M02
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyMetricsResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+      - *id003
+      - *id004
+  /api/v1/stores/{store_id}/cameras:
+    get:
+      tags:
+      - Monitoring
+      operationId: listarCamerasDemo
+      summary: Câmeras fictícias da loja
+      x-mvp-module: M03
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CameraListResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Metadados de câmeras simuladas, não há URL de vídeo real.
+      parameters:
+      - *id001
+  /api/v1/stores/{store_id}/monitoring/demo:
+    get:
+      tags:
+      - Monitoring
+      operationId: obterMonitoramentoDemo
+      summary: Contagens agregadas simuladas
+      x-mvp-module: M03
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringDemoResponse'
+              example:
+                store_id: 00000000-0000-4000-8000-000000000001
+                is_simulated: true
+                data_origin: DEMO
+                snapshot_at: '2026-11-07T18:00:00Z'
+                people_now: 18
+                entries_today: 126
+                exits_today: 103
+                zones: []
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+  /api/v1/stores/{store_id}/zones:
+    get:
+      tags:
+      - Heatmap
+      operationId: listarZonas
+      summary: Zonas do mapa esquemático
+      x-mvp-module: M03
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ZoneListResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+  /api/v1/stores/{store_id}/heatmap/demo:
+    get:
+      tags:
+      - Heatmap
+      operationId: obterMapaCalorDemo
+      summary: Mapa de calor sintético por dia
+      x-mvp-module: M03
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatmapDemoResponse'
+              example:
+                store_id: 00000000-0000-4000-8000-000000000001
+                date: '2026-11-07'
+                data_origin: DEMO
+                grid_width: 10
+                grid_height: 8
+                cells:
+                - grid_x: 0
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 4
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 5
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 6
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 7
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 0
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 4
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 5
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 6
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 7
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 1
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 2
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 2
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 2
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 2
+                  intensity: 0.75
+                - grid_x: 4
+                  grid_y: 2
+                  intensity: 0.75
+                - grid_x: 5
+                  grid_y: 2
+                  intensity: 0.75
+                - grid_x: 6
+                  grid_y: 2
+                  intensity: 0.75
+                - grid_x: 7
+                  grid_y: 2
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 2
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 2
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 3
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 3
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 3
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 3
+                  intensity: 0.75
+                - grid_x: 4
+                  grid_y: 3
+                  intensity: 0.75
+                - grid_x: 5
+                  grid_y: 3
+                  intensity: 0.75
+                - grid_x: 6
+                  grid_y: 3
+                  intensity: 0.75
+                - grid_x: 7
+                  grid_y: 3
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 3
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 3
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 4
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 4
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 4
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 4
+                  intensity: 0.75
+                - grid_x: 4
+                  grid_y: 4
+                  intensity: 0.75
+                - grid_x: 5
+                  grid_y: 4
+                  intensity: 0.75
+                - grid_x: 6
+                  grid_y: 4
+                  intensity: 0.75
+                - grid_x: 7
+                  grid_y: 4
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 4
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 4
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 5
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 5
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 5
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 5
+                  intensity: 0.75
+                - grid_x: 4
+                  grid_y: 5
+                  intensity: 0.75
+                - grid_x: 5
+                  grid_y: 5
+                  intensity: 0.75
+                - grid_x: 6
+                  grid_y: 5
+                  intensity: 0.75
+                - grid_x: 7
+                  grid_y: 5
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 5
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 5
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 4
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 5
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 6
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 7
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 6
+                  intensity: 0.15
+                - grid_x: 0
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 1
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 2
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 3
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 4
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 5
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 6
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 7
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 8
+                  grid_y: 7
+                  intensity: 0.15
+                - grid_x: 9
+                  grid_y: 7
+                  intensity: 0.15
+                insights:
+                - Corredor central com intensidade elevada na simulação.
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Grid 10x8. Data ausente pode retornar 200 com cells=[], não inventar valores.
+      parameters:
+      - *id001
+      - name: date
+        in: query
+        required: true
+        description: Dia na data local da loja
+        schema: *id002
+  /api/v1/stores/{store_id}/recommendations:
+    get:
+      tags:
+      - Recommendations
+      operationId: listarRecomendacoes
+      summary: Listar recomendações explicáveis
+      x-mvp-module: M04
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationListResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/RecommendationStatus'
+  /api/v1/stores/{store_id}/recommendations/{recommendation_id}:
+    patch:
+      tags:
+      - Recommendations
+      operationId: atualizarRecomendacao
+      summary: Aceitar ou descartar recomendação
+      x-mvp-module: M04
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Apenas transição de PROPOSED para ACCEPTED ou DISMISSED. Repetição de transição terminal
+        gera 409.
+      parameters:
+      - *id001
+      - name: recommendation_id
+        in: path
+        required: true
+        schema: *id005
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecommendationUpdateRequest'
+            example:
+              status: ACCEPTED
+  /api/v1/stores/{store_id}/experiments:
+    get:
+      tags:
+      - Experiments
+      operationId: listarExperimentos
+      summary: Listar experimentos da loja
+      x-mvp-module: M05
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentListResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+    post:
+      tags:
+      - Experiments
+      operationId: criarExperimento
+      summary: Criar experimento vinculado à recomendação aceita
+      x-mvp-module: M05
+      responses:
+        '201':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperimentCreateRequest'
+            example:
+              recommendation_id: 00000000-0000-4000-8000-000000000011
+              title: Testar acessórios no corredor central
+              metric: SALES
+              start_date: '2026-11-01'
+              end_date: '2026-11-07'
+  /api/v1/stores/{store_id}/experiments/{experiment_id}:
+    get:
+      tags:
+      - Experiments
+      operationId: obterExperimento
+      summary: Detalhar experimento
+      x-mvp-module: M05
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+      - &id006
+        name: experiment_id
+        in: path
+        required: true
+        schema: *id005
+  /api/v1/stores/{store_id}/experiments/{experiment_id}/status:
+    patch:
+      tags:
+      - Experiments
+      operationId: alterarStatusExperimento
+      summary: Iniciar, concluir ou cancelar experimento
+      x-mvp-module: M05
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id001
+      - *id006
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperimentStatusUpdateRequest'
+  /api/v1/stores/{store_id}/experiments/{experiment_id}/result:
+    get:
+      tags:
+      - Experiments
+      operationId: obterResultadoExperimento
+      summary: Comparar antes e durante um experimento
+      x-mvp-module: M05
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentResultResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Se não estiver COMPLETED ou faltar dados de uma das janelas, available=false e números nulos.
+      parameters:
+      - *id001
+      - *id006
+  /api/v1/stores/{store_id}/reports/summary:
+    get:
+      tags:
+      - Reports
+      operationId: obterRelatorioComparativo
+      summary: Comparar período atual com período anterior equivalente
+      x-mvp-module: M06
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparativeReportResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      description: Compara quantidades iguais de dias; se não houver dados completos, available=false.
+      parameters:
+      - *id001
+      - *id003
+      - *id004
+  /api/v1/circuits:
+    get:
+      tags:
+      - Circuits
+      operationId: listarCircuitos
+      summary: Listar circuitos visíveis ao usuário
+      x-mvp-module: M07
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircuitListResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - name: store_id
+        in: query
+        required: false
+        description: Opcional; filtra circuitos de loja autorizada
+        schema: *id005
+    post:
+      tags:
+      - Circuits
+      operationId: criarCircuito
+      summary: Criar circuito de três lojas (ADMIN)
+      x-mvp-module: M07
+      responses:
+        '201':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circuit'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CircuitCreateRequest'
+            example:
+              name: Circuito Moda Demo
+              reward_description: Cupom ilustrativo, sem valor real
+              store_ids:
+              - 00000000-0000-4000-8000-000000000001
+              - 00000000-0000-4000-8000-000000000002
+              - 00000000-0000-4000-8000-000000000003
+              start_date: '2026-11-01'
+              end_date: '2026-11-30'
+  /api/v1/circuits/{circuit_id}:
+    get:
+      tags:
+      - Circuits
+      operationId: obterCircuito
+      summary: Detalhar circuito visível
+      x-mvp-module: M07
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circuit'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - &id007
+        name: circuit_id
+        in: path
+        required: true
+        schema: *id005
+  /api/v1/circuits/{circuit_id}/status:
+    patch:
+      tags:
+      - Circuits
+      operationId: alterarStatusCircuito
+      summary: Alterar status de circuito (ADMIN)
+      x-mvp-module: M07
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circuit'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id007
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CircuitStatusUpdateRequest'
+  /api/v1/circuits/{circuit_id}/stats:
+    get:
+      tags:
+      - Circuits
+      operationId: obterEstatisticasCircuito
+      summary: Consultar conclusões agregadas demonstrativas
+      x-mvp-module: M07
+      responses:
+        '200':
+          description: Operação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircuitStatsResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+        '500':
+          $ref: '#/components/responses/Error500'
+      parameters:
+      - *id007
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT obtido em POST /api/v1/auth/login
+  schemas:
+    ApiErrorDetail:
+      type: object
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: Acesso não autorizado à loja
+        details:
+          anyOf:
+          - type: object
+            additionalProperties: true
+          - type: 'null'
+      required:
+      - code
+      - message
+      - details
+    ApiError:
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          $ref: '#/components/schemas/ApiErrorDetail'
+        request_id:
+          type: string
+          example: req_123abc
+      required:
+      - error
+      - request_id
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - ok
+        service:
+          type: string
+          example: nexo-api
+      required:
+      - status
+      - service
+    Role:
+      type: string
+      enum:
+      - ADMIN
+      - LOJISTA
+    DataOrigin:
+      type: string
+      enum:
+      - DEMO
+    User:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+          minLength: 1
+        role:
+          $ref: '#/components/schemas/Role'
+      required:
+      - id
+      - email
+      - display_name
+      - role
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+    LoginResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        access_token:
+          type: string
+          minLength: 10
+        token_type:
+          type: string
+          enum:
+          - bearer
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - access_token
+      - token_type
+      - user
+    Store:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        name:
+          type: string
+          minLength: 1
+        segment:
+          type: string
+          minLength: 1
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+        is_demo:
+          type: boolean
+      required:
+      - id
+      - name
+      - segment
+      - description
+      - is_demo
+    StoresResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Store'
+      required:
+      - items
+    DashboardSummary:
+      type: object
+      additionalProperties: false
+      properties:
+        store_id: *id005
+        period_start: *id002
+        period_end: *id002
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        visitors:
+          type: integer
+          minimum: 0
+        interactions:
+          type: integer
+          minimum: 0
+        sales_count:
+          type: integer
+          minimum: 0
+        revenue_brl: &id008
+          type: string
+          pattern: ^\d+\.\d{2}$
+          example: '1250.00'
+        conversion_rate:
+          anyOf:
+          - type: number
+            minimum: 0
+          - type: 'null'
+        visitor_change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+        sales_change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+      required:
+      - store_id
+      - period_start
+      - period_end
+      - data_origin
+      - visitors
+      - interactions
+      - sales_count
+      - revenue_brl
+      - conversion_rate
+      - visitor_change_percent
+      - sales_change_percent
+      description: KPIs em período inclusivo. Percentuais nulos quando denominador é zero; dados demo.
+    DailyMetric:
+      type: object
+      additionalProperties: false
+      properties:
+        date: *id002
+        visitor_count:
+          type: integer
+          minimum: 0
+        interaction_count:
+          type: integer
+          minimum: 0
+        sales_count:
+          type: integer
+          minimum: 0
+        revenue_brl: *id008
+        conversion_rate:
+          anyOf:
+          - type: number
+            minimum: 0
+          - type: 'null'
+      required:
+      - date
+      - visitor_count
+      - interaction_count
+      - sales_count
+      - revenue_brl
+      - conversion_rate
+    DailyMetricsResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        store_id: *id005
+        period_start: *id002
+        period_end: *id002
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyMetric'
+      required:
+      - store_id
+      - period_start
+      - period_end
+      - data_origin
+      - items
+    CameraDemo:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        store_id: *id005
+        name:
+          type: string
+        placement:
+          type: string
+        status:
+          type: string
+          enum:
+          - SIMULATED_ON
+          - SIMULATED_OFF
+        is_simulated:
+          type: boolean
+          enum:
+          - true
+      required:
+      - id
+      - store_id
+      - name
+      - placement
+      - status
+      - is_simulated
+    CameraListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CameraDemo'
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+      required:
+      - items
+      - data_origin
+    ZoneOccupancy:
+      type: object
+      additionalProperties: false
+      properties:
+        zone_id: *id005
+        zone_name:
+          type: string
+        percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+        estimated_count:
+          type: integer
+          minimum: 0
+      required:
+      - zone_id
+      - zone_name
+      - percentage
+      - estimated_count
+    MonitoringDemoResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        store_id: *id005
+        is_simulated:
+          type: boolean
+          enum:
+          - true
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        snapshot_at: &id009
+          type: string
+          format: date-time
+        people_now:
+          type: integer
+          minimum: 0
+        entries_today:
+          type: integer
+          minimum: 0
+        exits_today:
+          type: integer
+          minimum: 0
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneOccupancy'
+      required:
+      - store_id
+      - is_simulated
+      - data_origin
+      - snapshot_at
+      - people_now
+      - entries_today
+      - exits_today
+      - zones
+    StoreZone:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        store_id: *id005
+        name:
+          type: string
+        grid_x:
+          type: integer
+          minimum: 0
+          maximum: 9
+        grid_y:
+          type: integer
+          minimum: 0
+          maximum: 7
+        grid_width:
+          type: integer
+          minimum: 1
+          maximum: 10
+        grid_height:
+          type: integer
+          minimum: 1
+          maximum: 8
+      required:
+      - id
+      - store_id
+      - name
+      - grid_x
+      - grid_y
+      - grid_width
+      - grid_height
+    ZoneListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoreZone'
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+      required:
+      - items
+      - data_origin
+    HeatmapCell:
+      type: object
+      additionalProperties: false
+      properties:
+        grid_x:
+          type: integer
+          minimum: 0
+          maximum: 9
+        grid_y:
+          type: integer
+          minimum: 0
+          maximum: 7
+        intensity:
+          type: number
+          minimum: 0
+          maximum: 1
+      required:
+      - grid_x
+      - grid_y
+      - intensity
+    HeatmapDemoResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        store_id: *id005
+        date: *id002
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        grid_width:
+          type: integer
+          enum:
+          - 10
+        grid_height:
+          type: integer
+          enum:
+          - 8
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeatmapCell'
+        insights:
+          type: array
+          items:
+            type: string
+      required:
+      - store_id
+      - date
+      - data_origin
+      - grid_width
+      - grid_height
+      - cells
+      - insights
+    RecommendationPriority:
+      type: string
+      enum:
+      - HIGH
+      - MEDIUM
+      - LOW
+    RecommendationStatus:
+      type: string
+      enum:
+      - PROPOSED
+      - ACCEPTED
+      - DISMISSED
+    Recommendation:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        store_id: *id005
+        title:
+          type: string
+          minLength: 1
+        hypothesis:
+          type: string
+          minLength: 1
+        evidence:
+          type: string
+          minLength: 1
+        priority:
+          $ref: '#/components/schemas/RecommendationPriority'
+        status:
+          $ref: '#/components/schemas/RecommendationStatus'
+        generation_method:
+          type: string
+          enum:
+          - RULE_BASED_DEMO
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        created_at: *id009
+        updated_at: *id009
+      required:
+      - id
+      - store_id
+      - title
+      - hypothesis
+      - evidence
+      - priority
+      - status
+      - generation_method
+      - data_origin
+      - created_at
+      - updated_at
+    RecommendationListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+      required:
+      - items
+      - data_origin
+    RecommendationUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - ACCEPTED
+          - DISMISSED
+      required:
+      - status
+    ExperimentMetric:
+      type: string
+      enum:
+      - VISITORS
+      - SALES
+      - REVENUE
+      - CONVERSION
+    ExperimentStatus:
+      type: string
+      enum:
+      - DRAFT
+      - RUNNING
+      - COMPLETED
+      - CANCELLED
+    Experiment:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        store_id: *id005
+        recommendation_id: *id005
+        title:
+          type: string
+          minLength: 1
+        metric:
+          $ref: '#/components/schemas/ExperimentMetric'
+        start_date: *id002
+        end_date: *id002
+        status:
+          $ref: '#/components/schemas/ExperimentStatus'
+        created_at: *id009
+        updated_at: *id009
+      required:
+      - id
+      - store_id
+      - recommendation_id
+      - title
+      - metric
+      - start_date
+      - end_date
+      - status
+      - created_at
+      - updated_at
+    ExperimentListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Experiment'
+      required:
+      - items
+    ExperimentCreateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        recommendation_id: *id005
+        title:
+          type: string
+          minLength: 3
+          maxLength: 140
+        metric:
+          $ref: '#/components/schemas/ExperimentMetric'
+        start_date: *id002
+        end_date: *id002
+      required:
+      - recommendation_id
+      - title
+      - metric
+      - start_date
+      - end_date
+    ExperimentStatusUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - COMPLETED
+          - CANCELLED
+      required:
+      - status
+    MetricTotals:
+      type: object
+      additionalProperties: false
+      properties:
+        visitors:
+          type: integer
+          minimum: 0
+        interactions:
+          type: integer
+          minimum: 0
+        sales_count:
+          type: integer
+          minimum: 0
+        revenue_brl: *id008
+        conversion_rate:
+          anyOf:
+          - type: number
+            minimum: 0
+          - type: 'null'
+      required:
+      - visitors
+      - interactions
+      - sales_count
+      - revenue_brl
+      - conversion_rate
+    MetricChanges:
+      type: object
+      additionalProperties: false
+      properties:
+        visitor_change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+        interaction_change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+        sales_change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+        revenue_change_percent:
+          anyOf:
+          - type: number
+          - type: 'null'
+        conversion_change_pp:
+          anyOf:
+          - type: number
+          - type: 'null'
+      required:
+      - visitor_change_percent
+      - interaction_change_percent
+      - sales_change_percent
+      - revenue_change_percent
+      - conversion_change_pp
+    ExperimentResultResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        experiment_id: *id005
+        available:
+          type: boolean
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        baseline:
+          anyOf:
+          - $ref: '#/components/schemas/MetricTotals'
+          - type: 'null'
+        during:
+          anyOf:
+          - $ref: '#/components/schemas/MetricTotals'
+          - type: 'null'
+        changes:
+          anyOf:
+          - $ref: '#/components/schemas/MetricChanges'
+          - type: 'null'
+        disclaimer:
+          type: string
+          example: Comparação observacional; não prova causalidade.
+      required:
+      - experiment_id
+      - available
+      - reason
+      - data_origin
+      - baseline
+      - during
+      - changes
+      - disclaimer
+      description: Disponível somente para experimento COMPLETED e todas as datas das duas janelas preenchidas.
+    ComparativeReportResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        store_id: *id005
+        period_start: *id002
+        period_end: *id002
+        baseline_start: *id002
+        baseline_end: *id002
+        available:
+          type: boolean
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        baseline:
+          anyOf:
+          - $ref: '#/components/schemas/MetricTotals'
+          - type: 'null'
+        current:
+          anyOf:
+          - $ref: '#/components/schemas/MetricTotals'
+          - type: 'null'
+        changes:
+          anyOf:
+          - $ref: '#/components/schemas/MetricChanges'
+          - type: 'null'
+        disclaimer:
+          type: string
+          example: Comparação observacional, sem atribuição causal.
+      required:
+      - store_id
+      - period_start
+      - period_end
+      - baseline_start
+      - baseline_end
+      - available
+      - reason
+      - data_origin
+      - baseline
+      - current
+      - changes
+      - disclaimer
+    CircuitStatus:
+      type: string
+      enum:
+      - DRAFT
+      - ACTIVE
+      - FINISHED
+      - CANCELLED
+    Circuit:
+      type: object
+      additionalProperties: false
+      properties:
+        id: *id005
+        name:
+          type: string
+          minLength: 1
+        reward_description:
+          type: string
+          minLength: 1
+        start_date: *id002
+        end_date: *id002
+        status:
+          $ref: '#/components/schemas/CircuitStatus'
+        store_ids:
+          type: array
+          items: *id005
+          minItems: 3
+          maxItems: 3
+          uniqueItems: true
+        created_at: *id009
+      required:
+      - id
+      - name
+      - reward_description
+      - start_date
+      - end_date
+      - status
+      - store_ids
+      - created_at
+    CircuitCreateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 140
+        reward_description:
+          type: string
+          minLength: 3
+          maxLength: 240
+        store_ids:
+          type: array
+          items: *id005
+          minItems: 3
+          maxItems: 3
+          uniqueItems: true
+        start_date: *id002
+        end_date: *id002
+      required:
+      - name
+      - reward_description
+      - store_ids
+      - start_date
+      - end_date
+    CircuitListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Circuit'
+      required:
+      - items
+    CircuitStatusUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - FINISHED
+          - CANCELLED
+      required:
+      - status
+    CircuitStatsResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        circuit_id: *id005
+        data_origin:
+          $ref: '#/components/schemas/DataOrigin'
+        period_start: *id002
+        period_end: *id002
+        completed_count:
+          type: integer
+          minimum: 0
+      required:
+      - circuit_id
+      - data_origin
+      - period_start
+      - period_end
+      - completed_count
+  responses:
+    Error400:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Error401:
+      description: Não autenticado ou token inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Error403:
+      description: Sem permissão para o recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Error404:
+      description: Recurso inexistente ou oculto
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Error409:
+      description: Conflito com estado atual
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Error422:
+      description: Validação de dados ou filtros
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Error500:
+      description: Falha interna tratada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
