@@ -29,6 +29,7 @@ def install_http_logging(application: FastAPI) -> None:
     ) -> Response:
         start = perf_counter()
         request_id = "req_" + uuid4().hex
+        request.state.request_id = request_id
         try:
             response = await call_next(request)
         except Exception:

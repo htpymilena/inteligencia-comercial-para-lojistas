@@ -1,5 +1,25 @@
 # Backend M00 — NEXO 2031
 
+## Branch experimental M01
+
+Esta branch inclui identidade e lojas conforme contrato, além do M00 preservado.
+Exige `JWT_SECRET` via ambiente, com pelo menos 32 bytes, sem valor padrão.
+Não há refresh ou cadastro público. Aplicar `python -m alembic upgrade head`
+somente no banco autorizado antes de executar `python -m app.seed_demo`.
+A seed exige `DEMO_ADMIN_PASSWORD` e `DEMO_LOJISTA_PASSWORD` via ambiente;
+emails são admin@demo.invalid e lojista@demo.invalid. Reexecução não redefine
+senhas e falha em colisões. Não há seed no startup. Segredos não vão em logs.
+
+Rotas M01: POST /api/v1/auth/login, GET /api/v1/auth/me, GET /api/v1/stores,
+GET /api/v1/stores/{store_id}. JWT Bearer obrigatório exceto login e /health.
+ADMIN acessa todas; LOJISTA somente vínculos persistidos (403 nas demais).
+Validação retorna 422 ApiError; identidade inválida/inativa retorna 401.
+O engine é criado sem conectar no startup, sessão fecha por request e engine
+é descartado no shutdown. Ver EVIDENCIAS-M01.md para os limites SQL atuais.
+
+As seções M00 abaixo registram a baseline; no estado experimental, o runtime
+anuncia também operações M01 implementadas e requer JWT_SECRET no startup.
+
 Somente `GET /health` está implementado: público, `verificarSaude`,
 `{"status":"ok","service":"nexo-api"}`. Mede disponibilidade HTTP.
 O contrato normativo permanece em [sistema/openapi.yaml](../sistema/openapi.yaml).

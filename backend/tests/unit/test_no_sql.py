@@ -16,6 +16,6 @@ def test_import_and_http_do_not_connect(monkeypatch):
     module = importlib.reload(importlib.import_module("app.main"))
     with TestClient(module.create_app()) as client:
         assert client.get("/health").status_code == 200
-    assert not Base.metadata.tables
+    assert {"users", "stores", "user_stores"} <= set(Base.metadata.tables)
     engine = build_engine("postgresql+psycopg://test:test@127.0.0.1:1/test")
     engine.dispose()

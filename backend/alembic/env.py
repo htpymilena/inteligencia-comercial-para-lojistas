@@ -1,5 +1,6 @@
 import os
 
+import app.models  # noqa: F401
 from alembic import context
 from app.core.config import load_settings, validate_database_url
 from app.db.base import Base

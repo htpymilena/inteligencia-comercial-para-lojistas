@@ -3,8 +3,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api import router
 from app.core.config import load_settings
+from app.core.errors import install_errors
 from app.core.logging import configure_logging, install_http_logging
+from app.db.session import build_engine
 from app.schemas import ApiError, HealthResponse
 
 
@@ -12,12 +15,20 @@ from app.schemas import ApiError, HealthResponse
 async def lifespan(application: FastAPI) -> AsyncIterator[None]:
     application.state.settings = load_settings()
     configure_logging()
-    yield
+    application.state.engine = build_engine(
+        application.state.settings.database_url.get_secret_value()
+    )
+    try:
+        yield
+    finally:
+        application.state.engine.dispose()
 
 
 def create_app() -> FastAPI:
     application = FastAPI(title="NEXO 2031", version="0.1.0", lifespan=lifespan)
     install_http_logging(application)
+    install_errors(application)
+    application.include_router(router)
 
     @application.get(
         "/health",

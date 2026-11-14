@@ -5,6 +5,7 @@ import jsonschema
 import yaml
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
+from openapi_spec_validator import validate
 
 from app.main import create_app
 
@@ -29,6 +30,25 @@ def normalize(value):
     return value
 
 
+IMPLEMENTED = {"M00", "M01"}
+
+
+def expanded(document, value):
+    if isinstance(value, list):
+        return [expanded(document, item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    if "$ref" in value:
+        node = document
+        for part in value["$ref"].removeprefix("#/").split("/"):
+            node = node[part]
+        return expanded(document, node)
+    result = normalize({key: expanded(document, item) for key, item in value.items()})
+    if isinstance(result.get("required"), list):
+        result["required"] = sorted(result["required"])
+    return result
+
+
 def resolve_response(document, response):
     if "$ref" in response:
         response = document["components"]["responses"][response["$ref"].split("/")[-1]]
@@ -39,22 +59,39 @@ def test_runtime_m00_matches_contract(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://test:test@127.0.0.1:1/test")
     with TestClient(create_app()) as client:
         runtime = client.get("/openapi.json").json()
-    assert set(runtime["paths"]) == {"/health"}
-    actual = runtime["paths"]["/health"]["get"]
-    planned = CONTRACT["paths"]["/health"]["get"]
-    assert actual["operationId"] == planned["operationId"] == "verificarSaude"
-    assert actual["security"] == planned["security"] == []
-    assert not runtime.get("security")
-    assert set(actual["responses"]) == set(planned["responses"]) == {"200", "500"}
-    for code in ("200", "500"):
-        assert resolve_response(runtime, actual["responses"][code]) == resolve_response(
-            CONTRACT,
-            planned["responses"][code],
-        )
-    for name in ("HealthResponse", "ApiError", "ApiErrorDetail"):
-        assert normalize(runtime["components"]["schemas"][name]) == normalize(
-            CONTRACT["components"]["schemas"][name],
-        )
+    validate(CONTRACT)
+    validate(runtime)
+    expected = {
+        path: ops
+        for path, ops in CONTRACT["paths"].items()
+        if any(op.get("x-mvp-module") in IMPLEMENTED for op in ops.values())
+    }
+    assert set(runtime["paths"]) == set(expected)
+    for path, operations in expected.items():
+        assert set(runtime["paths"][path]) == set(operations)
+        for method, planned in operations.items():
+            actual = runtime["paths"][path][method]
+            assert actual["operationId"] == planned["operationId"]
+            assert actual.get("security", runtime.get("security")) == planned.get(
+                "security", CONTRACT["security"]
+            )
+            assert set(actual["responses"]) == set(planned["responses"])
+            for code in actual["responses"]:
+                assert expanded(runtime, resolve_response(runtime, actual["responses"][code])) == (
+                    expanded(CONTRACT, resolve_response(CONTRACT, planned["responses"][code]))
+                )
+            if "requestBody" in planned:
+                assert expanded(runtime, actual["requestBody"]) == expanded(
+                    CONTRACT, planned["requestBody"]
+                )
+
+            def params(doc, op):
+                return {
+                    (p["name"], p["in"]): (p.get("required", False), p["schema"])
+                    for p in expanded(doc, op.get("parameters", []))
+                }
+
+            assert params(runtime, actual) == params(CONTRACT, planned)
 
 
 def test_real_responses_validate_against_normative_schemas(monkeypatch):
