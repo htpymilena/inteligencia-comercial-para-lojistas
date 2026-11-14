@@ -1,5 +1,6 @@
 import os
 
+import app.experiment_models  # noqa: F401
 import app.metric_models  # noqa: F401
 import app.models  # noqa: F401
 import app.monitor_models  # noqa: F401

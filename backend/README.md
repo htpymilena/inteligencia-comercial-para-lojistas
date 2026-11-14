@@ -1,5 +1,16 @@
 # Backend M00 — NEXO 2031
 
+## M05 experimental
+
+Rotas `/api/v1/stores/{store_id}/experiments`: GET lista, POST cria (201),
+GET `/{experiment_id}`, PATCH `/{experiment_id}/status`, GET `/{experiment_id}/result`.
+Criação exige recomendação ACCEPTED da mesma loja e título de 3..140 caracteres.
+DRAFT→RUNNING/CANCELLED e RUNNING→COMPLETED/CANCELLED; terminais não reabrem (409).
+Resultado exige COMPLETED e todos os dias das duas janelas de N dias; caso contrário,
+available=false, motivo e baseline/during/changes null. Disclaimer observacional sempre.
+Revision 005; sem restrição de unicidade de experimento por recomendação e sem seed
+de experimento opcional: o ciclo é criado pela API ou fixtures de teste.
+
 ## M04 experimental
 
 GET `/api/v1/stores/{store_id}/recommendations` aceita filtro opcional `status`.
