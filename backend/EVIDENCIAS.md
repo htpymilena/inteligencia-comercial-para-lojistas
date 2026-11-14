@@ -50,12 +50,43 @@ curl.exe http://localhost:8000/health
 Startup concluído e log JSON com `GET`, `/health`, status 200, request ID e duração.
 O processo iniciado para o smoke foi encerrado ao final. Isso comprova somente HTTP.
 
+## Integração PostgreSQL — tarefa 3.7 concluída
+
+Evidência de execução manual fornecida pelo usuário e registrada em 14/11/2026.
+Executado no PowerShell, dentro de `backend/`, com Python **3.12.10** do
+ambiente virtual:
+
+```text
+python -m pytest tests/integration/test_database.py -v
+tests/integration/test_database.py::test_postgresql16_session_and_alembic PASSED
+1 passed in 3.86s
+```
+
+A conferência do código de `tests/integration/test_database.py`,
+`app/db/session.py` e `alembic/env.py` confirmou que esse teste cobre:
+
+- PostgreSQL 16 real, validado por `SHOW server_version_num` no intervalo
+  de 160000 (inclusive) a 170000 (exclusive).
+- `SELECT 1` por conexão direta e por duas sessões sucessivas.
+- Ciclo de sessões e devolução de conexões ao pool (`checkedout() == 0`),
+  com descarte do engine ao final.
+- `python -m alembic -x test=true current`, com código de saída zero.
+- Uso exclusivo de `TEST_DATABASE_URL`, inclusive no subprocesso Alembic,
+  sem fallback para `DATABASE_URL` ou SQLite.
+
+O arquivo executado é o único teste em `tests/integration/`, cobrindo assim
+a integração SQL prevista na tarefa. O resultado manual aprovado substitui
+a pendência da execução anterior pulada, preservada na tabela como histórico.
+Nesta atualização documental, o agente não reexecutou os testes nem consultou
+o ambiente de conexão. Nenhuma URL ou credencial foi registrada e nenhuma
+operação no banco foi executada pelo agente.
+
 ## Pendências e limites
 
-- **3.7 permanece desmarcada:** runner SQL implementado, mas PostgreSQL 16 de teste
-  e credenciais não foram fornecidos. `SELECT 1`, versão, ciclo de sessão/conexão e
-  Alembic current reais ainda não foram verificados. Não houve fallback SQL ou SQLite.
-- G00 **PENDENTE**; não declarar BACK plenamente validado ou M00 integrado.
+- **3.7 concluída:** integração SQL validada pela execução manual acima,
+  após conferência da cobertura do teste. Tarefas BACK 3.1–3.8 concluídas.
+- BACK M00 com verificações locais registradas; G00 **PENDENTE**, sem declarar
+  M00 integrado ou liberar avanço a M01.
 - FRONT, proxy, Compose, Dockerfiles, CI, persistência e revisão/integração pela equipe
   continuam fora desta entrega. Nenhum commit ou push foi executado.
 - Não houve alteração no contrato ou no planejamento técnico; somente atualização

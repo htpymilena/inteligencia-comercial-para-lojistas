@@ -32,7 +32,7 @@ Responsável: usuário/BACK. Limite: `backend/**`, exceto Dockerfile ou qualquer
 - [x] 3.5 Comparar runtime OpenAPI ao subconjunto M00 do contrato e documentar comandos backend; verificar schemas, operationId, security, pytest, lint e tipagem, sem anunciar operações futuras como implementadas.
 
 - [x] 3.6 Separar testes unitários/contratuais dos testes SQL e documentar os pré-requisitos em `backend/README.md`; verificar `python -m pytest tests/unit tests/contract` sem FRONT, Compose, CI ou banco ativo, usando pytest/httpx em processo e ambiente controlado.
-- [ ] 3.7 Implementar verificação de integração SQL por `TEST_DATABASE_URL` exclusiva para testes; com PostgreSQL 16 acessível, verificar `SELECT 1`, ciclo de sessão/conexão e `python -m alembic current` via `python -m pytest tests/integration`, sem fallback para banco de desenvolvimento ou SQLite; sem banco/credenciais, registrar pendência explícita e manter esta tarefa desmarcada.
+- [x] 3.7 Implementar verificação de integração SQL por `TEST_DATABASE_URL` exclusiva para testes; com PostgreSQL 16 acessível, verificar `SELECT 1`, ciclo de sessão/conexão e `python -m alembic current` via `python -m pytest tests/integration`, sem fallback para banco de desenvolvimento ou SQLite; sem banco/credenciais, registrar pendência explícita e manter esta tarefa desmarcada.
 - [x] 3.8 Documentar execução local Python 3.12, variáveis necessárias, dependências/lock e comandos de teste em `backend/README.md`; verificar inicialização Uvicorn direta e consulta `curl.exe http://localhost:8000/health`, registrar evidências BACK e pendências sem declarar G00 integrado nem instalar ferramentas automaticamente.
 
 ## 4. Frontend mínimo M00 — outro integrante, fora do escopo BACK
